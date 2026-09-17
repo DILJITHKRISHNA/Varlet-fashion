@@ -1,0 +1,58 @@
+# Monorepo root .gitignore — covers both Varlet-app (mobile) and Varlet-fashion (web).
+# Nested .gitignore files (Varlet-app/supabase/.gitignore, etc.) still apply too.
+
+# Dependencies
+**/node_modules/
+
+# Env / secrets — never commit local or real credentials
+.env
+.env.local
+.env.*.local
+**/.env
+**/.env.local
+**/.env.*.local
+
+# Expo / React Native
+Varlet-app/.expo/
+Varlet-app/dist/
+Varlet-app/web-build/
+Varlet-app/expo-env.d.ts
+Varlet-app/.metro-health-check*
+Varlet-app/*.jks
+Varlet-app/*.p8
+Varlet-app/*.p12
+Varlet-app/*.mobileprovision
+/Varlet-app/ios
+/Varlet-app/android
+
+# Supabase local dev
+Varlet-app/supabase/.branches
+Varlet-app/supabase/.temp
+Varlet-app/supabase/.env.keys
+
+# Vite / TanStack Start (web)
+Varlet-fashion/dist/
+Varlet-fashion/dist-ssr/
+Varlet-fashion/.output/
+Varlet-fashion/.vinxi/
+Varlet-fashion/.tanstack/**
+Varlet-fashion/.nitro/
+Varlet-fashion/.wrangler/
+Varlet-fashion/.dev.vars
+
+# Logs
+**/*.log
+**/npm-debug.log*
+**/yarn-debug.log*
+**/yarn-error.log*
+**/pnpm-debug.log*
+
+# Editors / OS
+.DS_Store
+**/.DS_Store
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# TypeScript
+**/*.tsbuildinfo
