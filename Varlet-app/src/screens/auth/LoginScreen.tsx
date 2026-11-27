@@ -3,6 +3,7 @@ import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView,
   TextInput, KeyboardAvoidingView, Platform, Alert,
 } from 'react-native';
+import { LogIn } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
 import Logo from '../../components/ui/Logo';
@@ -39,7 +40,7 @@ export default function LoginScreen({ navigation }: any) {
   const handleGoogleLogin = () => {
     Alert.alert(
       'Google sign-in not set up yet',
-      'This needs a Google OAuth client configured in the Supabase project — coming in a later step.'
+      'This needs a Google sign-in client to be configured — coming in a later step.'
     );
   };
 
@@ -177,7 +178,7 @@ export default function LoginScreen({ navigation }: any) {
           <>
             <Text style={[s.sub, { marginBottom: 24 }]}>Continue with your Google account for a seamless experience.</Text>
             <TouchableOpacity style={s.googleBtn} onPress={handleGoogleLogin} disabled={isLoading}>
-              <Text style={{ fontSize: 20 }}>🔵</Text>
+              <LogIn size={18} color={colors.foreground} />
               <Text style={s.googleText}>{isLoading ? 'Connecting…' : 'Continue with Google'}</Text>
             </TouchableOpacity>
           </>

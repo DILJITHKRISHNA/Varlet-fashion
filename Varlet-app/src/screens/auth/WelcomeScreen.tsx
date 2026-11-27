@@ -1,107 +1,108 @@
 import React from 'react';
-import {
-  View, Text, TouchableOpacity, StyleSheet, ScrollView, Image, Dimensions, StatusBar,
-} from 'react-native';
-import { Sparkles } from 'lucide-react-native';
+import { View, Text, TouchableOpacity, StyleSheet, Image, useWindowDimensions } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
+import Animated, { FadeInDown, FadeInUp } from 'react-native-reanimated';
+import { ArrowRight } from 'lucide-react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import Logo from '../../components/ui/Logo';
 import Button from '../../components/ui/Button';
+import Glow from '../../components/ui/Glow';
 
-const { width, height } = Dimensions.get('window');
-const HERO_IMAGE = 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=800';
+const LOOKS = [
+  'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600',
+  'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600',
+  'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600',
+];
+
+// Position and tilt of the three runway cards.
+const CARDS = [
+  { left: 0.02, top: 44, rotate: '-9deg', scale: 0.82 },
+  { left: 0.56, top: 60, rotate: '9deg', scale: 0.82 },
+  { left: 0.27, top: 8, rotate: '0deg', scale: 1 },
+];
 
 export default function WelcomeScreen({ navigation }: any) {
-  const { colors, borderRadius, shadow, fonts } = useTheme();
+  const { colors, fonts, borderRadius } = useTheme();
   const insets = useSafeAreaInsets();
+  const window = useWindowDimensions();
+  const width = Math.min(window.width, 480);
+  const cardWidth = width * 0.45;
+  const cardHeight = Math.min(cardWidth * 1.45, window.height * 0.34);
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: colors.background }]}
-      contentContainerStyle={{ paddingBottom: insets.bottom + 32 }}
-      showsVerticalScrollIndicator={false}
-    >
-      <StatusBar barStyle="dark-content" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <Glow color="#FF2E63" size={width * 1.3} style={{ top: -width * 0.45, right: -width * 0.5 }} />
+      <Glow color="#FF6B35" size={width * 1.1} duration={8000} style={{ top: window.height * 0.18, left: -width * 0.6 }} />
+      <Glow color="#4B23C9" size={width * 1.2} duration={9500} opacity={0.45} style={{ bottom: -width * 0.5, right: -width * 0.4 }} />
 
-      <View style={[styles.nav, { paddingTop: insets.top + 8 }]}>
+      <View style={[styles.inner, { paddingTop: insets.top + 12, paddingBottom: insets.bottom + 18 }]}>
         <Logo />
-      </View>
 
-      <View style={styles.orb} />
-
-      <View style={styles.heroContent}>
-        <View style={[styles.badge, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: borderRadius.full }]}>
-          <Sparkles size={14} color={colors.accent} />
-          <Text style={[styles.badgeText, { color: colors.foregroundMuted, fontFamily: fonts.medium }]}>
-            Local fashion discovery
-          </Text>
+        <View style={[styles.stage, { height: cardHeight + 80, width: width - 48 }]}>
+          {CARDS.map((card, i) => (
+            <Animated.View
+              key={LOOKS[i]}
+              entering={FadeInDown.delay(150 + i * 160).springify().damping(15)}
+              style={{ position: 'absolute', left: (width - 48) * card.left, top: card.top }}
+            >
+              <View
+                style={[
+                  styles.card,
+                  {
+                    width: cardWidth, height: cardHeight, borderRadius: borderRadius.xl,
+                    backgroundColor: colors.surfaceElevated,
+                    transform: [{ rotate: card.rotate }, { scale: card.scale }],
+                  },
+                ]}
+              >
+                <Image source={{ uri: LOOKS[i] }} style={styles.image} />
+                <LinearGradient colors={['transparent', 'rgba(8,7,10,0.65)']} style={StyleSheet.absoluteFill} />
+              </View>
+            </Animated.View>
+          ))}
         </View>
 
-        <Text style={[styles.headline, { color: colors.foreground, fontFamily: fonts.semiBold }]}>
-          Fashion Near You.{'\n'}
-          <Text style={{ color: colors.accent }}>Instantly.</Text>
-        </Text>
+        <View>
+          <Animated.Text entering={FadeInUp.delay(450).duration(600)} style={[styles.eyebrow, { color: colors.accent, fontFamily: fonts.semiBold }]}>
+            LOCAL FASHION DISCOVERY
+          </Animated.Text>
+          <Animated.Text entering={FadeInUp.delay(550).duration(600)} style={[styles.headline, { color: colors.foreground, fontFamily: fonts.display }]}>
+            Fashion near you.
+          </Animated.Text>
+          <Animated.Text entering={FadeInUp.delay(680).duration(600)} style={[styles.serif, { color: colors.accent, fontFamily: fonts.serif }]}>
+            Instantly.
+          </Animated.Text>
+          <Animated.Text entering={FadeInUp.delay(780).duration(600)} style={[styles.sub, { color: colors.foregroundMuted, fontFamily: fonts.regular }]}>
+            Streetwear, ethnic, sneakers and more from real stores around you.
+          </Animated.Text>
 
-        <Text style={[styles.subtext, { color: colors.foregroundMuted, fontFamily: fonts.regular }]}>
-          Discover oversized tees, cargos, streetwear, Korean fashion, sneakers and more — from real stores around you.
-        </Text>
-
-        <Button label="Get Started" onPress={() => navigation.navigate('Register')} fullWidth style={{ marginTop: 24 }} />
-        <Button
-          label="I already have an account"
-          variant="outline"
-          onPress={() => navigation.navigate('Login')}
-          fullWidth
-          style={{ marginTop: 12 }}
-        />
-
-        <TouchableOpacity onPress={() => navigation.navigate('AdminLogin')}>
-          <Text style={[styles.adminLink, { color: colors.foregroundMuted, fontFamily: fonts.medium }]}>
-            Shop Owner / Admin Login →
-          </Text>
-        </TouchableOpacity>
+          <Animated.View entering={FadeInUp.delay(900).duration(600)}>
+            <Button label="Get Started" variant="accent" onPress={() => navigation.navigate('Register')} fullWidth style={{ marginTop: 20 }} />
+            <Button label="I already have an account" variant="outline" onPress={() => navigation.navigate('Login')} fullWidth style={{ marginTop: 10 }} />
+            <TouchableOpacity onPress={() => navigation.navigate('AdminLogin')} style={styles.adminRow}>
+              <Text style={[styles.adminText, { color: colors.foregroundMuted, fontFamily: fonts.medium }]}>
+                Shop Owner / Admin Login
+              </Text>
+              <ArrowRight size={14} color={colors.foregroundMuted} />
+            </TouchableOpacity>
+          </Animated.View>
+        </View>
       </View>
-
-      <View style={[styles.imageCard, { borderRadius: borderRadius['3xl'], backgroundColor: colors.secondary }, shadow.soft]}>
-        <Image source={{ uri: HERO_IMAGE }} style={styles.heroImage} />
-      </View>
-    </ScrollView>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  nav: { paddingHorizontal: 24, paddingBottom: 8 },
-  orb: {
-    position: 'absolute',
-    top: -80,
-    alignSelf: 'center',
-    width: width * 0.9,
-    height: 280,
-    borderRadius: 999,
-    backgroundColor: '#FFF0EA',
-    opacity: 0.7,
-  },
-  heroContent: { paddingHorizontal: 24, paddingTop: 16 },
-  badge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    alignSelf: 'flex-start',
-    gap: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderWidth: 1,
-    marginBottom: 20,
-  },
-  badgeText: { fontSize: 12, fontWeight: '500' },
-  headline: { fontSize: 40, fontWeight: '600', lineHeight: 44, letterSpacing: -1 },
-  subtext: { fontSize: 16, lineHeight: 24, marginTop: 16, maxWidth: 340 },
-  adminLink: { fontSize: 13, textAlign: 'center', marginTop: 20 },
-  imageCard: {
-    marginHorizontal: 24,
-    marginTop: 32,
-    overflow: 'hidden',
-    height: height * 0.42,
-  },
-  heroImage: { width: '100%', height: '100%', resizeMode: 'cover' },
+  container: { flex: 1, overflow: 'hidden' },
+  inner: { flex: 1, paddingHorizontal: 24, justifyContent: 'space-between', width: '100%', maxWidth: 480, alignSelf: 'center' },
+  stage: { marginTop: 12 },
+  card: { overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.16)' },
+  image: { width: '100%', height: '100%', resizeMode: 'cover' },
+  eyebrow: { fontSize: 11, letterSpacing: 3, marginBottom: 10 },
+  headline: { fontSize: 36, lineHeight: 42, letterSpacing: -1.2 },
+  serif: { fontSize: 52, lineHeight: 56, marginTop: -4 },
+  sub: { fontSize: 14, lineHeight: 21, marginTop: 8 },
+  adminRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 6, paddingTop: 16 },
+  adminText: { fontSize: 13 },
 });

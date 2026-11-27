@@ -31,14 +31,15 @@ Varlet-app/supabase/.temp
 Varlet-app/supabase/.env.keys
 
 # Vite / TanStack Start (web)
-Varlet-fashion/dist/
-Varlet-fashion/dist-ssr/
-Varlet-fashion/.output/
-Varlet-fashion/.vinxi/
-Varlet-fashion/.tanstack/**
-Varlet-fashion/.nitro/
-Varlet-fashion/.wrangler/
-Varlet-fashion/.dev.vars
+Varlet-fashion/frontend/dist/
+Varlet-fashion/frontend/dist-ssr/
+Varlet-fashion/frontend/.output/
+Varlet-fashion/frontend/.vinxi/
+Varlet-fashion/frontend/.tanstack/**
+Varlet-fashion/frontend/.nitro/
+Varlet-fashion/frontend/.wrangler/
+Varlet-fashion/frontend/.dev.vars
+Varlet-fashion/frontend/.vercel/
 
 # Logs
 **/*.log
@@ -56,3 +57,6 @@ Varlet-fashion/.dev.vars
 
 # TypeScript
 **/*.tsbuildinfo
+
+# Vite cache
+**/.vite/

@@ -3,13 +3,17 @@ import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   Dimensions,
 } from 'react-native';
+import {
+  Store, Package, Tag, Users, Image as ImageIcon, BarChart3, Bell, ClipboardList,
+  UserCheck, Search, Palette, LayoutGrid, ChevronRight, type LucideIcon,
+} from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { MOCK_ANALYTICS } from '../../services/mockData';
 import ScreenHeader from '../../components/ui/ScreenHeader';
 
 const { width } = Dimensions.get('window');
 
-function StatCard({ label, value, icon, color }: { label: string; value: string | number; icon: string; color: string }) {
+function StatCard({ label, value, icon: Icon, color }: { label: string; value: string | number; icon: LucideIcon; color: string }) {
   const { colors, borderRadius } = useTheme();
   return (
     <View style={{
@@ -19,7 +23,7 @@ function StatCard({ label, value, icon, color }: { label: string; value: string 
     }}>
       <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 10 }}>
         <View style={{ width: 36, height: 36, borderRadius: 10, backgroundColor: color + '20', alignItems: 'center', justifyContent: 'center' }}>
-          <Text style={{ fontSize: 18 }}>{icon}</Text>
+          <Icon size={18} color={color} />
         </View>
       </View>
       <Text style={{ fontSize: 22, fontWeight: '700', color: colors.foreground }}>{typeof value === 'number' ? value.toLocaleString() : value}</Text>
@@ -66,29 +70,29 @@ export default function AdminDashboardScreen({ navigation }: any) {
       backgroundColor: colors.surface, borderRadius: borderRadius.xl, padding: 16, marginBottom: 14,
       shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.06, shadowRadius: 8, elevation: 2,
     },
-    sectionTitle: { fontSize: 15, fontWeight: '700', color: colors.foreground, marginBottom: 14 },
+    sectionTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 14 },
+    sectionTitle: { fontSize: 15, fontWeight: '700', color: colors.foreground },
     navItem: {
       flexDirection: 'row', alignItems: 'center', paddingVertical: 12,
       borderBottomWidth: 1, borderBottomColor: colors.border,
     },
-    navIcon: { fontSize: 22, marginRight: 12, width: 36, textAlign: 'center' },
-    navLabel: { flex: 1, fontSize: 15, fontWeight: '500', color: colors.foreground },
-    navArrow: { fontSize: 18, color: colors.foregroundMuted },
+    navIconWrap: { width: 36, alignItems: 'center' },
+    navLabel: { flex: 1, fontSize: 15, fontWeight: '500', color: colors.foreground, marginLeft: 12 },
     rankRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 10 },
     rankNum: { fontSize: 14, fontWeight: '700', color: colors.foregroundMuted, width: 24 },
     rankBar: { flex: 1, height: 8, borderRadius: 4, marginHorizontal: 10 },
     rankLabel: { fontSize: 12, color: colors.foreground, width: 80 },
   });
 
-  const NAV_ITEMS = [
-    { icon: '🏪', label: 'Shop Management', screen: 'AdminShops' },
-    { icon: '📦', label: 'Product Management', screen: 'AdminProducts' },
-    { icon: '🏷️', label: 'Promotions', screen: 'AdminPromotions' },
-    { icon: '👥', label: 'User Management', screen: 'AdminUsers' },
-    { icon: '🖼️', label: 'Banner Management', screen: 'AdminBanners' },
-    { icon: '📊', label: 'Analytics', screen: null },
-    { icon: '🔔', label: 'Notifications', screen: null },
-    { icon: '📋', label: 'Reports & Moderation', screen: null },
+  const NAV_ITEMS: { icon: LucideIcon; label: string; screen: string | null }[] = [
+    { icon: Store, label: 'Shop Management', screen: 'AdminShops' },
+    { icon: Package, label: 'Product Management', screen: 'AdminProducts' },
+    { icon: Tag, label: 'Promotions', screen: 'AdminPromotions' },
+    { icon: Users, label: 'User Management', screen: 'AdminUsers' },
+    { icon: ImageIcon, label: 'Banner Management', screen: 'AdminBanners' },
+    { icon: BarChart3, label: 'Analytics', screen: null },
+    { icon: Bell, label: 'Notifications', screen: null },
+    { icon: ClipboardList, label: 'Reports & Moderation', screen: null },
   ];
 
   return (
@@ -99,7 +103,7 @@ export default function AdminDashboardScreen({ navigation }: any) {
         {(['overview', 'analytics'] as const).map(t => (
           <TouchableOpacity key={t} style={[s.tabBtn, { backgroundColor: activeSection === t ? colors.surface : 'transparent', elevation: activeSection === t ? 2 : 0 }]} onPress={() => setActiveSection(t)}>
             <Text style={[s.tabText, { color: activeSection === t ? '#FF6B35' : colors.foregroundMuted }]}>
-              {t === 'overview' ? '📊 Overview' : '📈 Analytics'}
+              {t === 'overview' ? 'Overview' : 'Analytics'}
             </Text>
           </TouchableOpacity>
         ))}
@@ -109,10 +113,10 @@ export default function AdminDashboardScreen({ navigation }: any) {
         {activeSection === 'overview' ? (
           <>
             <View style={s.statsGrid}>
-              <StatCard label="Total Users" value={MOCK_ANALYTICS.totalUsers} icon="👥" color="#3B82F6" />
-              <StatCard label="Active Users" value={MOCK_ANALYTICS.activeUsers} icon="🟢" color="#10B981" />
-              <StatCard label="Total Products" value={MOCK_ANALYTICS.totalProducts} icon="📦" color="#8B5CF6" />
-              <StatCard label="Total Shops" value={MOCK_ANALYTICS.totalShops} icon="🏪" color="#FF6B35" />
+              <StatCard label="Total Users" value={MOCK_ANALYTICS.totalUsers} icon={Users} color="#3B82F6" />
+              <StatCard label="Active Users" value={MOCK_ANALYTICS.activeUsers} icon={UserCheck} color="#10B981" />
+              <StatCard label="Total Products" value={MOCK_ANALYTICS.totalProducts} icon={Package} color="#8B5CF6" />
+              <StatCard label="Total Shops" value={MOCK_ANALYTICS.totalShops} icon={Store} color="#FF6B35" />
             </View>
 
             {/* Revenue card */}
@@ -134,9 +138,11 @@ export default function AdminDashboardScreen({ navigation }: any) {
               <Text style={s.sectionTitle}>Manage</Text>
               {NAV_ITEMS.map(item => (
                 <TouchableOpacity key={item.label} style={s.navItem} onPress={() => item.screen && navigation.navigate(item.screen)}>
-                  <Text style={s.navIcon}>{item.icon}</Text>
+                  <View style={s.navIconWrap}>
+                    <item.icon size={20} color={colors.foreground} />
+                  </View>
                   <Text style={s.navLabel}>{item.label}</Text>
-                  <Text style={s.navArrow}>›</Text>
+                  <ChevronRight size={18} color={colors.foregroundMuted} />
                 </TouchableOpacity>
               ))}
             </View>
@@ -145,7 +151,10 @@ export default function AdminDashboardScreen({ navigation }: any) {
           <>
             {/* Most Searched */}
             <View style={s.sectionCard}>
-              <Text style={s.sectionTitle}>🔍 Most Searched Products</Text>
+              <View style={s.sectionTitleRow}>
+                <Search size={16} color={colors.foregroundMuted} />
+                <Text style={s.sectionTitle}>Most Searched Products</Text>
+              </View>
               {MOCK_ANALYTICS.mostSearched.map((term, i) => (
                 <View key={term} style={s.rankRow}>
                   <Text style={s.rankNum}>#{i + 1}</Text>
@@ -157,7 +166,10 @@ export default function AdminDashboardScreen({ navigation }: any) {
 
             {/* Popular categories */}
             <View style={s.sectionCard}>
-              <Text style={s.sectionTitle}>📁 Popular Categories</Text>
+              <View style={s.sectionTitleRow}>
+                <LayoutGrid size={16} color={colors.foregroundMuted} />
+                <Text style={s.sectionTitle}>Popular Categories</Text>
+              </View>
               <BarChart
                 data={[581, 342, 276, 218, 195]}
                 labels={["Women's", "Men's", 'Footwear', 'Street', 'Ethnic']}
@@ -167,7 +179,10 @@ export default function AdminDashboardScreen({ navigation }: any) {
 
             {/* Popular colors */}
             <View style={s.sectionCard}>
-              <Text style={s.sectionTitle}>🎨 Popular Colors</Text>
+              <View style={s.sectionTitleRow}>
+                <Palette size={16} color={colors.foregroundMuted} />
+                <Text style={s.sectionTitle}>Popular Colors</Text>
+              </View>
               {MOCK_ANALYTICS.popularColors.map((color, i) => (
                 <View key={color} style={s.rankRow}>
                   <Text style={s.rankNum}>#{i + 1}</Text>
@@ -179,7 +194,10 @@ export default function AdminDashboardScreen({ navigation }: any) {
 
             {/* Demographics */}
             <View style={s.sectionCard}>
-              <Text style={s.sectionTitle}>👤 User Demographics</Text>
+              <View style={s.sectionTitleRow}>
+                <Users size={16} color={colors.foregroundMuted} />
+                <Text style={s.sectionTitle}>User Demographics</Text>
+              </View>
               {Object.entries(MOCK_ANALYTICS.userDemographics).map(([age, pct]) => (
                 <View key={age} style={{ marginBottom: 10 }}>
                   <View style={{ flexDirection: 'row', justifyContent: 'space-between', marginBottom: 4 }}>

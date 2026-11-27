@@ -1,14 +1,8 @@
 
 /**
  * Theme Context
- * Provides colors/typography/spacing to entire app.
- *
- * Pinned to 'light' to match Varlet-fashion (the web app): it defines dark
- * CSS variables but never applies the `.dark` class anywhere, so it always
- * renders light regardless of the visitor's OS preference. Following the
- * device's system scheme here would make the mobile app look inconsistent
- * with — and darker than — the web app. Flip this to follow
- * `useColorScheme()` again once the web app ships a real dark mode toggle.
+ * Provides colors/typography/spacing to the entire app.
+ * Dark only ("Midnight Runway"), the same as the web app.
  */
 
 import React, { createContext, useContext, ReactNode } from 'react';
@@ -31,7 +25,7 @@ interface ThemeContextValue {
 const ThemeContext = createContext<ThemeContextValue | null>(null);
 
 export function ThemeProvider({ children }: { children: ReactNode }) {
-  const colors = getColors('light');
+  const colors = getColors('dark');
 
   const value: ThemeContextValue = {
     colors,
@@ -42,7 +36,7 @@ export function ThemeProvider({ children }: { children: ReactNode }) {
     borderRadius,
     shadow,
     layout,
-    isDark: false,
+    isDark: true,
   };
 
   return <ThemeContext.Provider value={value}>{children}</ThemeContext.Provider>;

@@ -2,15 +2,17 @@
 -- real content immediately. Auth users are seeded separately (scripts/seed-users.mjs)
 -- because Supabase auth needs the admin API, not raw SQL, to hash passwords correctly.
 
+-- `icon` is a key into CATEGORY_ICONS (Varlet-app/src/constants/categoryIcons.ts,
+-- and Varlet-fashion's equivalent), not an emoji — kept as plain lucide icon names.
 insert into categories (name, icon, color, sort_order) values
-  ('Men''s Wear', '👔', '#3B82F6', 1),
-  ('Women''s Wear', '👗', '#EC4899', 2),
-  ('Streetwear', '🧢', '#FF6B35', 3),
-  ('Ethnic Wear', '🥻', '#8B5CF6', 4),
-  ('Accessories', '👜', '#10B981', 5),
-  ('Footwear', '👟', '#F59E0B', 6),
-  ('Formal Wear', '🤵', '#374151', 7),
-  ('Party Wear', '✨', '#EF4444', 8);
+  ('Men''s Wear', 'Shirt', '#3B82F6', 1),
+  ('Women''s Wear', 'Gem', '#EC4899', 2),
+  ('Streetwear', 'Backpack', '#FF6B35', 3),
+  ('Ethnic Wear', 'Palette', '#8B5CF6', 4),
+  ('Accessories', 'Handbag', '#10B981', 5),
+  ('Footwear', 'Footprints', '#F59E0B', 6),
+  ('Formal Wear', 'Briefcase', '#374151', 7),
+  ('Party Wear', 'PartyPopper', '#EF4444', 8);
 
 insert into shops (id, name, description, logo_url, cover_image_url, category, location_text, location, rating, review_count, follower_count, is_verified, is_open) values
   ('00000000-0000-0000-0000-000000000001', 'Urban Thread Co.', 'Premium streetwear & casual fashion for the modern youth.',
@@ -20,7 +22,7 @@ insert into shops (id, name, description, logo_url, cover_image_url, category, l
     4.8, 342, 1240, true, true),
   ('00000000-0000-0000-0000-000000000002', 'Ethnic Bazaar', 'Your one-stop destination for traditional and fusion ethnic wear.',
     'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=200',
-    'https://images.unsplash.com/photo-1583391733956-6c78276477e1?w=800',
+    'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800',
     'Ethnic Wear', 'Commercial Street, Bengaluru', st_setsrid(st_makepoint(77.6086, 12.9822), 4326)::geography,
     4.6, 198, 876, true, true),
   ('00000000-0000-0000-0000-000000000003', 'Sole Republic', 'Sneakers, boots, loafers — every step, a statement.',
@@ -44,14 +46,14 @@ insert into products (id, shop_id, name, brand, category, price, original_price,
     true, 4.6, 124, array['oversized','graphic','casual','streetwear'], 'Casual', 'Oversized', 'unisex', true, false),
   ('00000000-0000-0000-0000-000000000102', '00000000-0000-0000-0000-000000000001', 'Cargo Joggers', 'Urban Thread Co.', 'Streetwear',
     1499, 2199,
-    array['https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600', 'https://images.unsplash.com/photo-1594938298603-c8148e4b2a3f?w=600'],
+    array['https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600', 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600'],
     'Multi-pocket cargo joggers with tapered fit. Perfect blend of utility and style.',
     array['S','M','L','XL'],
     '[{"name":"Olive","hex":"#4D7C0F"},{"name":"Khaki","hex":"#A16207"},{"name":"Black","hex":"#1F2937"}]',
     true, 4.8, 89, array['cargo','joggers','utility','streetwear'], 'Casual', 'Tapered', 'men', true, true),
   ('00000000-0000-0000-0000-000000000103', '00000000-0000-0000-0000-000000000002', 'Floral Anarkali Kurta', 'Ethnic Bazaar', 'Ethnic Wear',
     2199, 3499,
-    array['https://images.unsplash.com/photo-1583391733956-6c78276477e1?w=600'],
+    array['https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600'],
     'Elegant floral print Anarkali kurta with thread embroidery. Perfect for festive occasions.',
     array['XS','S','M','L','XL'],
     '[{"name":"Rose","hex":"#F43F5E"},{"name":"Teal","hex":"#0D9488"}]',
@@ -65,7 +67,7 @@ insert into products (id, shop_id, name, brand, category, price, original_price,
     true, 4.9, 234, array['sneakers','air','comfort','sports'], 'Casual', 'Regular', 'unisex', true, false),
   ('00000000-0000-0000-0000-000000000105', '00000000-0000-0000-0000-000000000004', 'Linen Blazer', 'Chic Collective', 'Women''s Wear',
     4299, 5999,
-    array['https://images.unsplash.com/photo-1594938298603-c8148e4b2a3f?w=600'],
+    array['https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600'],
     'Breathable linen blazer perfect for work-to-weekend transition. Slim-fit silhouette.',
     array['XS','S','M','L'],
     '[{"name":"Ivory","hex":"#FFFBEB"},{"name":"Navy","hex":"#1E3A5F"},{"name":"Blush","hex":"#FBCFE8"}]',
@@ -80,8 +82,8 @@ insert into products (id, shop_id, name, brand, category, price, original_price,
 
 insert into outfits (shop_id, title, image_url, style, tags, product_ids, saved_count) values
   ('00000000-0000-0000-0000-000000000001', 'Clean Streetwear Look', 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600', 'Streetwear', array['casual','minimal','monochrome'], array['00000000-0000-0000-0000-000000000101','00000000-0000-0000-0000-000000000102']::uuid[], 2341),
-  ('00000000-0000-0000-0000-000000000002', 'Festive Ethnic Glam', 'https://images.unsplash.com/photo-1583391733956-6c78276477e1?w=600', 'Ethnic', array['festive','traditional','colorful'], array['00000000-0000-0000-0000-000000000103']::uuid[], 1876),
-  ('00000000-0000-0000-0000-000000000004', 'Office Chic', 'https://images.unsplash.com/photo-1594938298603-c8148e4b2a3f?w=600', 'Formal', array['work','professional','elegant'], array['00000000-0000-0000-0000-000000000105']::uuid[], 987),
+  ('00000000-0000-0000-0000-000000000002', 'Festive Ethnic Glam', 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600', 'Ethnic', array['festive','traditional','colorful'], array['00000000-0000-0000-0000-000000000103']::uuid[], 1876),
+  ('00000000-0000-0000-0000-000000000004', 'Office Chic', 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600', 'Formal', array['work','professional','elegant'], array['00000000-0000-0000-0000-000000000105']::uuid[], 987),
   ('00000000-0000-0000-0000-000000000001', 'Weekend Casual', 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600', 'Casual', array['weekend','relaxed','comfortable'], array['00000000-0000-0000-0000-000000000101','00000000-0000-0000-0000-000000000104']::uuid[], 1543),
   ('00000000-0000-0000-0000-000000000001', 'Korean Street Style', 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600', 'Korean', array['kfashion','trendy','youth'], array['00000000-0000-0000-0000-000000000106','00000000-0000-0000-0000-000000000104']::uuid[], 3210),
   ('00000000-0000-0000-0000-000000000004', 'Party Night', 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=600', 'Party', array['glam','night-out','bold'], array['00000000-0000-0000-0000-000000000105']::uuid[], 2109);

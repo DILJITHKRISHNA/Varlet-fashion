@@ -10,9 +10,20 @@
     {
       "name": "varlet-fashion-web",
       "runtimeExecutable": "npm",
-      "runtimeArgs": ["--prefix", "Varlet-fashion", "run", "dev"],
+      "runtimeArgs": ["--prefix", "Varlet-fashion/frontend", "run", "dev"],
       "port": 8082,
       "autoPort": true
+    },
+    {
+      "name": "varlet-api",
+      "runtimeExecutable": "Varlet-fashion/backend/.venv/bin/python",
+      "runtimeArgs": [
+        "-m", "uvicorn", "app.main:app",
+        "--app-dir", "Varlet-fashion/backend",
+        "--host", "0.0.0.0", "--port", "8100",
+        "--reload", "--reload-dir", "Varlet-fashion/backend/app"
+      ],
+      "port": 8100
     }
   ]
 }

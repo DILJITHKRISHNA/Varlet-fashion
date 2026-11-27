@@ -3,13 +3,14 @@
  * Mirrors the web app's Inter font usage and text sizes.
  */
 
-import { Platform } from 'react-native';
-
 export const fontFamily = {
-  regular: Platform.select({ ios: 'Inter-Regular', android: 'Inter-Regular', default: 'Inter' }),
-  medium: Platform.select({ ios: 'Inter-Medium', android: 'Inter-Medium', default: 'Inter' }),
-  semiBold: Platform.select({ ios: 'Inter-SemiBold', android: 'Inter-SemiBold', default: 'Inter' }),
-  bold: Platform.select({ ios: 'Inter-Bold', android: 'Inter-Bold', default: 'Inter' }),
+  regular: 'Inter-Regular',
+  medium: 'Inter-Medium',
+  semiBold: 'Inter-SemiBold',
+  bold: 'Inter-Bold',
+  display: 'Bricolage-Bold',
+  displaySemi: 'Bricolage-SemiBold',
+  serif: 'InstrumentSerif-Italic',
 } as const;
 
 export const fontSize = {

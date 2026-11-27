@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Package, Tag, Store, Sparkles, Settings, Bell, type LucideIcon } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
 import { getNotifications, markNotificationRead } from '../../services/api';
@@ -23,8 +24,8 @@ export default function NotificationsScreen({ navigation }: any) {
     }
   };
 
-  const TYPE_ICONS: Record<string, string> = {
-    collection: '👗', promotion: '🏷️', shop_update: '🏪', recommendation: '✨', system: '⚙️',
+  const TYPE_ICONS: Record<string, LucideIcon> = {
+    collection: Package, promotion: Tag, shop_update: Store, recommendation: Sparkles, system: Settings,
   };
 
   const s = StyleSheet.create({
@@ -40,7 +41,6 @@ export default function NotificationsScreen({ navigation }: any) {
     },
     unread: { borderLeftWidth: 3, borderLeftColor: '#FF6B35' },
     iconWrap: { width: 44, height: 44, borderRadius: 22, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center', marginRight: 12 },
-    icon: { fontSize: 20 },
     content_: { flex: 1 },
     notifTitle: { fontSize: 14, fontWeight: '700', color: colors.foreground, marginBottom: 2 },
     notifBody: { fontSize: 13, color: colors.foregroundMuted, lineHeight: 18 },
@@ -67,10 +67,12 @@ export default function NotificationsScreen({ navigation }: any) {
         <Text style={s.title}>Notifications</Text>
       </View>
       <ScrollView contentContainerStyle={s.content}>
-        {notifications.map(n => (
+        {notifications.map(n => {
+          const Icon = TYPE_ICONS[n.type] ?? Bell;
+          return (
           <TouchableOpacity key={n.id} style={[s.notifCard, !n.isRead && s.unread]} onPress={() => openNotification(n)}>
             <View style={s.iconWrap}>
-              <Text style={s.icon}>{TYPE_ICONS[n.type] ?? '🔔'}</Text>
+              <Icon size={20} color={colors.foreground} />
             </View>
             <View style={s.content_}>
               <Text style={s.notifTitle}>{n.title}</Text>
@@ -79,7 +81,8 @@ export default function NotificationsScreen({ navigation }: any) {
             </View>
             {!n.isRead && <View style={s.unreadDot} />}
           </TouchableOpacity>
-        ))}
+          );
+        })}
       </ScrollView>
     </View>
   );

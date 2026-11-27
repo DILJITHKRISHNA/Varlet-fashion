@@ -101,15 +101,16 @@ export interface User {
 
 // ─── Mock Data ─────────────────────────────────────────────────────────────
 
+// `icon` is a key into CATEGORY_ICONS (src/constants/categoryIcons.ts), not an emoji.
 export const MOCK_CATEGORIES: Category[] = [
-  { id: 'cat1', name: "Men's Wear", icon: '👔', productCount: 342, color: '#3B82F6' },
-  { id: 'cat2', name: "Women's Wear", icon: '👗', productCount: 581, color: '#EC4899' },
-  { id: 'cat3', name: 'Streetwear', icon: '🧢', productCount: 218, color: '#FF6B35' },
-  { id: 'cat4', name: 'Ethnic Wear', icon: '🥻', productCount: 195, color: '#8B5CF6' },
-  { id: 'cat5', name: 'Accessories', icon: '👜', productCount: 410, color: '#10B981' },
-  { id: 'cat6', name: 'Footwear', icon: '👟', productCount: 276, color: '#F59E0B' },
-  { id: 'cat7', name: 'Formal Wear', icon: '🤵', productCount: 143, color: '#374151' },
-  { id: 'cat8', name: 'Party Wear', icon: '✨', productCount: 167, color: '#EF4444' },
+  { id: 'cat1', name: "Men's Wear", icon: 'Shirt', productCount: 342, color: '#3B82F6' },
+  { id: 'cat2', name: "Women's Wear", icon: 'Gem', productCount: 581, color: '#EC4899' },
+  { id: 'cat3', name: 'Streetwear', icon: 'Backpack', productCount: 218, color: '#FF6B35' },
+  { id: 'cat4', name: 'Ethnic Wear', icon: 'Palette', productCount: 195, color: '#8B5CF6' },
+  { id: 'cat5', name: 'Accessories', icon: 'Handbag', productCount: 410, color: '#10B981' },
+  { id: 'cat6', name: 'Footwear', icon: 'Footprints', productCount: 276, color: '#F59E0B' },
+  { id: 'cat7', name: 'Formal Wear', icon: 'Briefcase', productCount: 143, color: '#374151' },
+  { id: 'cat8', name: 'Party Wear', icon: 'PartyPopper', productCount: 167, color: '#EF4444' },
 ];
 
 export const MOCK_SHOPS: Shop[] = [
@@ -123,7 +124,7 @@ export const MOCK_SHOPS: Shop[] = [
   {
     id: 'shop2', name: 'Ethnic Bazaar', description: 'Your one-stop destination for traditional and fusion ethnic wear.',
     logo: 'https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=200',
-    coverImage: 'https://images.unsplash.com/photo-1583391733956-6c78276477e1?w=800',
+    coverImage: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800',
     category: 'Ethnic Wear', rating: 4.6, reviewCount: 198, followerCount: 876,
     distance: '1.2 km', location: 'Commercial Street, Bengaluru', isVerified: true, productCount: 243, isOpen: true,
   },
@@ -163,7 +164,7 @@ export const MOCK_PRODUCTS: Product[] = [
     price: 1499, originalPrice: 2199,
     images: [
       'https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600',
-      'https://images.unsplash.com/photo-1594938298603-c8148e4b2a3f?w=600',
+      'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600',
     ],
     description: 'Multi-pocket cargo joggers with tapered fit. Perfect blend of utility and style.',
     sizes: ['S', 'M', 'L', 'XL'],
@@ -176,7 +177,7 @@ export const MOCK_PRODUCTS: Product[] = [
     id: 'prod3', name: 'Floral Anarkali Kurta', brand: 'Ethnic Bazaar', category: 'Ethnic Wear',
     price: 2199, originalPrice: 3499,
     images: [
-      'https://images.unsplash.com/photo-1583391733956-6c78276477e1?w=600',
+      'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600',
     ],
     description: 'Elegant floral print Anarkali kurta with thread embroidery. Perfect for festive occasions.',
     sizes: ['XS', 'S', 'M', 'L', 'XL'],
@@ -203,7 +204,7 @@ export const MOCK_PRODUCTS: Product[] = [
     id: 'prod5', name: 'Linen Blazer', brand: 'Chic Collective', category: "Women's Wear",
     price: 4299, originalPrice: 5999,
     images: [
-      'https://images.unsplash.com/photo-1594938298603-c8148e4b2a3f?w=600',
+      'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600',
     ],
     description: 'Breathable linen blazer perfect for work-to-weekend transition. Slim-fit silhouette.',
     sizes: ['XS', 'S', 'M', 'L'],
@@ -229,8 +230,8 @@ export const MOCK_PRODUCTS: Product[] = [
 
 export const MOCK_OUTFITS: Outfit[] = [
   { id: 'out1', title: 'Clean Streetwear Look', image: 'https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600', style: 'Streetwear', tags: ['casual', 'minimal', 'monochrome'], products: ['prod1', 'prod2'], savedCount: 2341, shopId: 'shop1' },
-  { id: 'out2', title: 'Festive Ethnic Glam', image: 'https://images.unsplash.com/photo-1583391733956-6c78276477e1?w=600', style: 'Ethnic', tags: ['festive', 'traditional', 'colorful'], products: ['prod3'], savedCount: 1876, shopId: 'shop2' },
-  { id: 'out3', title: 'Office Chic', image: 'https://images.unsplash.com/photo-1594938298603-c8148e4b2a3f?w=600', style: 'Formal', tags: ['work', 'professional', 'elegant'], products: ['prod5'], savedCount: 987, shopId: 'shop4' },
+  { id: 'out2', title: 'Festive Ethnic Glam', image: 'https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600', style: 'Ethnic', tags: ['festive', 'traditional', 'colorful'], products: ['prod3'], savedCount: 1876, shopId: 'shop2' },
+  { id: 'out3', title: 'Office Chic', image: 'https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600', style: 'Formal', tags: ['work', 'professional', 'elegant'], products: ['prod5'], savedCount: 987, shopId: 'shop4' },
   { id: 'out4', title: 'Weekend Casual', image: 'https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600', style: 'Casual', tags: ['weekend', 'relaxed', 'comfortable'], products: ['prod1', 'prod4'], savedCount: 1543, shopId: 'shop1' },
   { id: 'out5', title: 'Korean Street Style', image: 'https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600', style: 'Korean', tags: ['kfashion', 'trendy', 'youth'], products: ['prod6', 'prod4'], savedCount: 3210, shopId: 'shop1' },
   { id: 'out6', title: 'Party Night', image: 'https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=600', style: 'Party', tags: ['glam', 'night-out', 'bold'], products: ['prod5'], savedCount: 2109, shopId: 'shop4' },

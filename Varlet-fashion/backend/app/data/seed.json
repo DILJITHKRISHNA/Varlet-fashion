@@ -1,0 +1,538 @@
+{
+ "categories": [
+  {
+   "name": "Men's Wear",
+   "icon": "Shirt",
+   "color": "#3B82F6",
+   "sort_order": 1
+  },
+  {
+   "name": "Women's Wear",
+   "icon": "Gem",
+   "color": "#EC4899",
+   "sort_order": 2
+  },
+  {
+   "name": "Streetwear",
+   "icon": "Backpack",
+   "color": "#FF6B35",
+   "sort_order": 3
+  },
+  {
+   "name": "Ethnic Wear",
+   "icon": "Palette",
+   "color": "#8B5CF6",
+   "sort_order": 4
+  },
+  {
+   "name": "Accessories",
+   "icon": "Handbag",
+   "color": "#10B981",
+   "sort_order": 5
+  },
+  {
+   "name": "Footwear",
+   "icon": "Footprints",
+   "color": "#F59E0B",
+   "sort_order": 6
+  },
+  {
+   "name": "Formal Wear",
+   "icon": "Briefcase",
+   "color": "#374151",
+   "sort_order": 7
+  },
+  {
+   "name": "Party Wear",
+   "icon": "PartyPopper",
+   "color": "#EF4444",
+   "sort_order": 8
+  }
+ ],
+ "shops": [
+  {
+   "id": "00000000-0000-0000-0000-000000000001",
+   "name": "Urban Thread Co.",
+   "description": "Premium streetwear & casual fashion for the modern youth.",
+   "logo_url": "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=200",
+   "cover_image_url": "https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=800",
+   "category": "Streetwear",
+   "location_text": "MG Road, Bengaluru",
+   "lat": 12.9757,
+   "lng": 77.607,
+   "rating": 4.8,
+   "review_count": 342,
+   "follower_count": 1241,
+   "is_verified": true,
+   "is_open": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000002",
+   "name": "Ethnic Bazaar",
+   "description": "Your one-stop destination for traditional and fusion ethnic wear.",
+   "logo_url": "https://images.unsplash.com/photo-1558769132-cb1aea458c5e?w=200",
+   "cover_image_url": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=800",
+   "category": "Ethnic Wear",
+   "location_text": "Commercial Street, Bengaluru",
+   "lat": 12.9822,
+   "lng": 77.6086,
+   "rating": 4.6,
+   "review_count": 198,
+   "follower_count": 876,
+   "is_verified": true,
+   "is_open": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000003",
+   "name": "Sole Republic",
+   "description": "Sneakers, boots, loafers — every step, a statement.",
+   "logo_url": "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200",
+   "cover_image_url": "https://images.unsplash.com/photo-1489987707025-afc232f7ea0f?w=800",
+   "category": "Footwear",
+   "location_text": "Koramangala, Bengaluru",
+   "lat": 12.9352,
+   "lng": 77.6245,
+   "rating": 4.7,
+   "review_count": 289,
+   "follower_count": 2100,
+   "is_verified": true,
+   "is_open": false
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000004",
+   "name": "Chic Collective",
+   "description": "Contemporary womens fashion with a Parisian twist.",
+   "logo_url": "https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=200",
+   "cover_image_url": "https://images.unsplash.com/photo-1445205170230-053b83016050?w=800",
+   "category": "Women's Wear",
+   "location_text": "Indiranagar, Bengaluru",
+   "lat": 12.9719,
+   "lng": 77.6412,
+   "rating": 4.9,
+   "review_count": 512,
+   "follower_count": 3450,
+   "is_verified": true,
+   "is_open": true
+  }
+ ],
+ "products": [
+  {
+   "id": "00000000-0000-0000-0000-000000000101",
+   "shop_id": "00000000-0000-0000-0000-000000000001",
+   "name": "Oversized Graphic Tee",
+   "brand": "Urban Thread Co.",
+   "category": "Streetwear",
+   "price": 799.0,
+   "original_price": 1299.0,
+   "images": [
+    "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600",
+    "https://images.unsplash.com/photo-1503341504253-dff4815485f1?w=600"
+   ],
+   "description": "The perfect oversized tee for every casual occasion. Made from 100% organic cotton with a relaxed fit.",
+   "sizes": [
+    "XS",
+    "S",
+    "M",
+    "L",
+    "XL",
+    "XXL"
+   ],
+   "colors": [
+    {
+     "hex": "#1F2937",
+     "name": "Black"
+    },
+    {
+     "hex": "#F9FAFB",
+     "name": "White"
+    },
+    {
+     "hex": "#64748B",
+     "name": "Slate"
+    }
+   ],
+   "in_stock": true,
+   "rating": 4.6,
+   "review_count": 124,
+   "tags": [
+    "oversized",
+    "graphic",
+    "casual",
+    "streetwear"
+   ],
+   "occasion": "Casual",
+   "fit": "Oversized",
+   "gender": "unisex",
+   "is_trending": true,
+   "is_new": false
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000102",
+   "shop_id": "00000000-0000-0000-0000-000000000001",
+   "name": "Cargo Joggers",
+   "brand": "Urban Thread Co.",
+   "category": "Streetwear",
+   "price": 1499.0,
+   "original_price": 2199.0,
+   "images": [
+    "https://images.unsplash.com/photo-1624378439575-d8705ad7ae80?w=600",
+    "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600"
+   ],
+   "description": "Multi-pocket cargo joggers with tapered fit. Perfect blend of utility and style.",
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL"
+   ],
+   "colors": [
+    {
+     "hex": "#4D7C0F",
+     "name": "Olive"
+    },
+    {
+     "hex": "#A16207",
+     "name": "Khaki"
+    },
+    {
+     "hex": "#1F2937",
+     "name": "Black"
+    }
+   ],
+   "in_stock": true,
+   "rating": 4.8,
+   "review_count": 89,
+   "tags": [
+    "cargo",
+    "joggers",
+    "utility",
+    "streetwear"
+   ],
+   "occasion": "Casual",
+   "fit": "Tapered",
+   "gender": "men",
+   "is_trending": true,
+   "is_new": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000103",
+   "shop_id": "00000000-0000-0000-0000-000000000002",
+   "name": "Floral Anarkali Kurta",
+   "brand": "Ethnic Bazaar",
+   "category": "Ethnic Wear",
+   "price": 2199.0,
+   "original_price": 3499.0,
+   "images": [
+    "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600"
+   ],
+   "description": "Elegant floral print Anarkali kurta with thread embroidery. Perfect for festive occasions.",
+   "sizes": [
+    "XS",
+    "S",
+    "M",
+    "L",
+    "XL"
+   ],
+   "colors": [
+    {
+     "hex": "#F43F5E",
+     "name": "Rose"
+    },
+    {
+     "hex": "#0D9488",
+     "name": "Teal"
+    }
+   ],
+   "in_stock": true,
+   "rating": 4.7,
+   "review_count": 67,
+   "tags": [
+    "ethnic",
+    "kurta",
+    "festive",
+    "floral"
+   ],
+   "occasion": "Festive",
+   "fit": "Regular",
+   "gender": "women",
+   "is_trending": false,
+   "is_new": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000104",
+   "shop_id": "00000000-0000-0000-0000-000000000003",
+   "name": "Air Cushion Sneakers",
+   "brand": "Sole Republic",
+   "category": "Footwear",
+   "price": 3499.0,
+   "original_price": 4999.0,
+   "images": [
+    "https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=600",
+    "https://images.unsplash.com/photo-1595950653106-6c9ebd614d3a?w=600"
+   ],
+   "description": "Next-gen air cushion sneakers with responsive foam midsole. All-day comfort guaranteed.",
+   "sizes": [
+    "6",
+    "7",
+    "8",
+    "9",
+    "10",
+    "11"
+   ],
+   "colors": [
+    {
+     "hex": "#FFFFFF",
+     "name": "White/Red"
+    },
+    {
+     "hex": "#1F2937",
+     "name": "Black/Gold"
+    }
+   ],
+   "in_stock": true,
+   "rating": 4.9,
+   "review_count": 234,
+   "tags": [
+    "sneakers",
+    "air",
+    "comfort",
+    "sports"
+   ],
+   "occasion": "Casual",
+   "fit": "Regular",
+   "gender": "unisex",
+   "is_trending": true,
+   "is_new": false
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000105",
+   "shop_id": "00000000-0000-0000-0000-000000000004",
+   "name": "Linen Blazer",
+   "brand": "Chic Collective",
+   "category": "Women's Wear",
+   "price": 4299.0,
+   "original_price": 5999.0,
+   "images": [
+    "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600"
+   ],
+   "description": "Breathable linen blazer perfect for work-to-weekend transition. Slim-fit silhouette.",
+   "sizes": [
+    "XS",
+    "S",
+    "M",
+    "L"
+   ],
+   "colors": [
+    {
+     "hex": "#FFFBEB",
+     "name": "Ivory"
+    },
+    {
+     "hex": "#1E3A5F",
+     "name": "Navy"
+    },
+    {
+     "hex": "#FBCFE8",
+     "name": "Blush"
+    }
+   ],
+   "in_stock": true,
+   "rating": 4.8,
+   "review_count": 156,
+   "tags": [
+    "blazer",
+    "linen",
+    "formal",
+    "work"
+   ],
+   "occasion": "Formal",
+   "fit": "Slim",
+   "gender": "women",
+   "is_trending": false,
+   "is_new": true
+  },
+  {
+   "id": "00000000-0000-0000-0000-000000000106",
+   "shop_id": "00000000-0000-0000-0000-000000000001",
+   "name": "Korean Puffer Jacket",
+   "brand": "Urban Thread Co.",
+   "category": "Streetwear",
+   "price": 2799.0,
+   "original_price": 3999.0,
+   "images": [
+    "https://images.unsplash.com/photo-1545291730-faff8ca1d4b0?w=600"
+   ],
+   "description": "Trendy Korean-style cropped puffer jacket. Lightweight insulation for cool weather.",
+   "sizes": [
+    "S",
+    "M",
+    "L",
+    "XL"
+   ],
+   "colors": [
+    {
+     "hex": "#6EE7B7",
+     "name": "Mint"
+    },
+    {
+     "hex": "#C4B5FD",
+     "name": "Lavender"
+    },
+    {
+     "hex": "#1F2937",
+     "name": "Black"
+    }
+   ],
+   "in_stock": true,
+   "rating": 4.5,
+   "review_count": 92,
+   "tags": [
+    "korean",
+    "puffer",
+    "jacket",
+    "winter"
+   ],
+   "occasion": "Casual",
+   "fit": "Cropped",
+   "gender": "women",
+   "is_trending": true,
+   "is_new": true
+  }
+ ],
+ "outfits": [
+  {
+   "id": "27c38a8d-7504-4d39-a88e-bdb82e5fb440",
+   "shop_id": "00000000-0000-0000-0000-000000000001",
+   "title": "Clean Streetwear Look",
+   "image_url": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=600",
+   "style": "Streetwear",
+   "tags": [
+    "casual",
+    "minimal",
+    "monochrome"
+   ],
+   "product_ids": [
+    "00000000-0000-0000-0000-000000000101",
+    "00000000-0000-0000-0000-000000000102"
+   ],
+   "saved_count": 2341
+  },
+  {
+   "id": "30a86960-3c1a-4832-b21d-b784a029a184",
+   "shop_id": "00000000-0000-0000-0000-000000000002",
+   "title": "Festive Ethnic Glam",
+   "image_url": "https://images.unsplash.com/photo-1610030469983-98e550d6193c?w=600",
+   "style": "Ethnic",
+   "tags": [
+    "festive",
+    "traditional",
+    "colorful"
+   ],
+   "product_ids": [
+    "00000000-0000-0000-0000-000000000103"
+   ],
+   "saved_count": 1876
+  },
+  {
+   "id": "ed57ab68-683a-4dae-9d6b-8cfd77de9299",
+   "shop_id": "00000000-0000-0000-0000-000000000001",
+   "title": "Korean Street Style",
+   "image_url": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=600",
+   "style": "Korean",
+   "tags": [
+    "kfashion",
+    "trendy",
+    "youth"
+   ],
+   "product_ids": [
+    "00000000-0000-0000-0000-000000000106",
+    "00000000-0000-0000-0000-000000000104"
+   ],
+   "saved_count": 3210
+  },
+  {
+   "id": "6708bea6-e9c2-4a9d-b38f-8ceaf45fdb17",
+   "shop_id": "00000000-0000-0000-0000-000000000004",
+   "title": "Office Chic",
+   "image_url": "https://images.unsplash.com/photo-1591047139829-d91aecb6caea?w=600",
+   "style": "Formal",
+   "tags": [
+    "work",
+    "professional",
+    "elegant"
+   ],
+   "product_ids": [
+    "00000000-0000-0000-0000-000000000105"
+   ],
+   "saved_count": 987
+  },
+  {
+   "id": "543c8885-da30-4f1a-8bd8-a0602d37cb0b",
+   "shop_id": "00000000-0000-0000-0000-000000000004",
+   "title": "Party Night",
+   "image_url": "https://images.unsplash.com/photo-1496747611176-843222e1e57c?w=600",
+   "style": "Party",
+   "tags": [
+    "glam",
+    "night-out",
+    "bold"
+   ],
+   "product_ids": [
+    "00000000-0000-0000-0000-000000000105"
+   ],
+   "saved_count": 2109
+  },
+  {
+   "id": "5efb7e28-2c88-481f-8a60-1746ca0bc227",
+   "shop_id": "00000000-0000-0000-0000-000000000001",
+   "title": "Weekend Casual",
+   "image_url": "https://images.unsplash.com/photo-1509631179647-0177331693ae?w=600",
+   "style": "Casual",
+   "tags": [
+    "weekend",
+    "relaxed",
+    "comfortable"
+   ],
+   "product_ids": [
+    "00000000-0000-0000-0000-000000000101",
+    "00000000-0000-0000-0000-000000000104"
+   ],
+   "saved_count": 1543
+  }
+ ],
+ "banners": [
+  {
+   "id": "de9e1387-7a6e-4aab-a860-243a09d5632b",
+   "title": "Summer Fiesta",
+   "subtitle": "Up to 60% off on summer collection",
+   "image_url": "https://images.unsplash.com/photo-1469334031218-e382a71b716b?w=1200",
+   "type": "seasonal",
+   "cta_text": "Shop Now",
+   "cta_route": "Search",
+   "background_color": "#FF6B35",
+   "sort_order": 1
+  },
+  {
+   "id": "0dc10004-1570-4699-b222-d0542ad05d1e",
+   "title": "New Arrivals",
+   "subtitle": "Fresh drops every week",
+   "image_url": "https://images.unsplash.com/photo-1441984904996-e0b6ba687e04?w=1200",
+   "type": "homepage",
+   "cta_text": "Explore",
+   "cta_route": "Feed",
+   "background_color": "#1F2937",
+   "sort_order": 2
+  },
+  {
+   "id": "f4c4416c-0dd4-44e4-a9d3-0d3042e3f064",
+   "title": "Korean Wave",
+   "subtitle": "Discover K-fashion near you",
+   "image_url": "https://images.unsplash.com/photo-1515886657613-9f3515b0c78f?w=1200",
+   "type": "campaign",
+   "cta_text": "Discover",
+   "cta_route": "Feed",
+   "background_color": "#8B5CF6",
+   "sort_order": 3
+  }
+ ]
+}

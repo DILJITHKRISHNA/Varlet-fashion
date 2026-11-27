@@ -4,6 +4,7 @@ import {
   Image, TextInput,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Check, Star, Pencil, Trash2, MoreVertical } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { MOCK_SHOPS, MOCK_PRODUCTS, MOCK_USERS } from '../../services/mockData';
 
@@ -24,9 +25,10 @@ export function AdminShopsScreen({ navigation }: any) {
     cardBody: { padding: 14 },
     row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     shopName: { fontSize: 16, fontWeight: '700', color: colors.foreground },
-    verifiedBadge: { paddingHorizontal: 8, paddingVertical: 3, backgroundColor: '#D1FAE5', borderRadius: borderRadius.full },
+    verifiedBadge: { flexDirection: 'row', alignItems: 'center', gap: 3, paddingHorizontal: 8, paddingVertical: 3, backgroundColor: colors.successSoft, borderRadius: borderRadius.full },
     verifiedText: { fontSize: 11, fontWeight: '700', color: '#10B981' },
-    meta: { fontSize: 12, color: colors.foregroundMuted, marginTop: 4 },
+    metaRow: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+    meta: { fontSize: 12, color: colors.foregroundMuted },
     actionRow: { flexDirection: 'row', gap: 8, marginTop: 12 },
     actionBtn: { flex: 1, paddingVertical: 8, borderRadius: borderRadius.lg, alignItems: 'center', borderWidth: 1 },
     actionText: { fontSize: 13, fontWeight: '600' },
@@ -49,9 +51,18 @@ export function AdminShopsScreen({ navigation }: any) {
             <View style={s.cardBody}>
               <View style={s.row}>
                 <Text style={s.shopName}>{shop.name}</Text>
-                {shop.isVerified && <View style={s.verifiedBadge}><Text style={s.verifiedText}>✓ Verified</Text></View>}
+                {shop.isVerified && (
+                  <View style={s.verifiedBadge}>
+                    <Check size={11} color="#10B981" strokeWidth={3} />
+                    <Text style={s.verifiedText}>Verified</Text>
+                  </View>
+                )}
               </View>
-              <Text style={s.meta}>{shop.location} · {shop.productCount} products · ⭐ {shop.rating}</Text>
+              <View style={s.metaRow}>
+                <Text style={s.meta}>{shop.location} · {shop.productCount} products ·</Text>
+                <Star size={11} color={colors.foregroundMuted} fill={colors.foregroundMuted} />
+                <Text style={s.meta}>{shop.rating}</Text>
+              </View>
               <View style={s.actionRow}>
                 <TouchableOpacity style={[s.actionBtn, { borderColor: colors.border }]}>
                   <Text style={[s.actionText, { color: colors.foreground }]}>Edit</Text>
@@ -92,7 +103,7 @@ export function AdminProductsScreen({ navigation }: any) {
     price: { fontSize: 14, fontWeight: '700', color: '#FF6B35', marginTop: 4 },
     actions: { padding: 8, gap: 6 },
     editBtn: { width: 32, height: 32, borderRadius: 8, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center' },
-    deleteBtn: { width: 32, height: 32, borderRadius: 8, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center' },
+    deleteBtn: { width: 32, height: 32, borderRadius: 8, backgroundColor: colors.destructiveSoft, alignItems: 'center', justifyContent: 'center' },
   });
   return (
     <View style={s.container}>
@@ -115,8 +126,8 @@ export function AdminProductsScreen({ navigation }: any) {
               <Text style={s.price}>₹{p.price.toLocaleString()}</Text>
             </View>
             <View style={s.actions}>
-              <TouchableOpacity style={s.editBtn}><Text>✏️</Text></TouchableOpacity>
-              <TouchableOpacity style={s.deleteBtn}><Text>🗑️</Text></TouchableOpacity>
+              <TouchableOpacity style={s.editBtn}><Pencil size={15} color={colors.foreground} /></TouchableOpacity>
+              <TouchableOpacity style={s.deleteBtn}><Trash2 size={15} color="#EF4444" /></TouchableOpacity>
             </View>
           </View>
         ))}
@@ -147,7 +158,6 @@ export function AdminUsersScreen({ navigation }: any) {
     roleBadge: { paddingHorizontal: 8, paddingVertical: 3, borderRadius: borderRadius.full, marginTop: 4, alignSelf: 'flex-start' },
     roleText: { fontSize: 11, fontWeight: '700' },
     actionBtn: { marginLeft: 'auto' as any, padding: 6 },
-    actionText: { fontSize: 18 },
   });
   return (
     <View style={s.container}>
@@ -165,12 +175,12 @@ export function AdminUsersScreen({ navigation }: any) {
             <View style={{ flex: 1 }}>
               <Text style={s.name}>{u.name}</Text>
               <Text style={s.meta}>{u.email}</Text>
-              <View style={[s.roleBadge, { backgroundColor: u.role === 'admin' ? '#FEE2E2' : colors.secondary }]}>
+              <View style={[s.roleBadge, { backgroundColor: u.role === 'admin' ? colors.destructiveSoft : colors.secondary }]}>
                 <Text style={[s.roleText, { color: u.role === 'admin' ? '#EF4444' : colors.foreground }]}>{u.role}</Text>
               </View>
             </View>
             <TouchableOpacity style={s.actionBtn}>
-              <Text style={s.actionText}>⋯</Text>
+              <MoreVertical size={18} color={colors.foregroundMuted} />
             </TouchableOpacity>
           </View>
         ))}
@@ -219,7 +229,7 @@ export function AdminPromotionsScreen({ navigation }: any) {
           <View key={p.id} style={s.card}>
             <View style={s.row}>
               <Text style={s.promoTitle}>{p.title}</Text>
-              <View style={[s.statusBadge, { backgroundColor: p.status === 'active' ? '#D1FAE5' : '#FEF3C7' }]}>
+              <View style={[s.statusBadge, { backgroundColor: p.status === 'active' ? colors.successSoft : colors.warningSoft }]}>
                 <Text style={{ fontSize: 11, fontWeight: '700', color: p.status === 'active' ? '#10B981' : '#F59E0B' }}>{p.status}</Text>
               </View>
             </View>

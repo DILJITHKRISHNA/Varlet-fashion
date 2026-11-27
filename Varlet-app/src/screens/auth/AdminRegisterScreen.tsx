@@ -5,7 +5,6 @@ import {
 } from 'react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
-import { registerShop } from '../../services/api';
 import { useLocation } from '../../hooks/useLocation';
 import Button from '../../components/ui/Button';
 import Logo from '../../components/ui/Logo';
@@ -14,7 +13,7 @@ const CATEGORIES = ['Streetwear', "Men's Wear", "Women's Wear", 'Ethnic Wear', '
 
 export default function AdminRegisterScreen({ navigation }: any) {
   const { colors, borderRadius } = useTheme();
-  const { signUpWithEmail, refreshProfile } = useAuthStore();
+  const { signUpStoreOwner } = useAuthStore();
   const { coords, permissionDenied } = useLocation();
 
   const [ownerName, setOwnerName] = useState('');
@@ -36,20 +35,24 @@ export default function AdminRegisterScreen({ navigation }: any) {
       Alert.alert('Location not ready', 'Still detecting your location — try again in a moment');
       return;
     }
+    if (password.length < 8) {
+      Alert.alert('Password too short', 'Use at least 8 characters');
+      return;
+    }
     setLoading(true);
     try {
-      await signUpWithEmail({ name: ownerName, email, password });
-      await registerShop({
-        name: storeName,
+      // RootNavigator opens the shop dashboard once the new owner is signed in.
+      await signUpStoreOwner({
+        ownerName,
+        email,
+        password,
+        storeName,
         description,
         category,
         locationText,
         lat: coords.lat,
         lng: coords.lng,
       });
-      await refreshProfile();
-      // RootNavigator re-routes to the shop dashboard automatically once the
-      // refreshed profile shows role: 'admin' + shopId.
     } catch (e) {
       Alert.alert('Registration failed', e instanceof Error ? e.message : 'Please try again');
     } finally {

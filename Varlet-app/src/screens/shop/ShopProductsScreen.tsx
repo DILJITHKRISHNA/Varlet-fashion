@@ -25,7 +25,7 @@ export default function ShopProductsScreen({ navigation }: any) {
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
         <TouchableOpacity style={{ marginBottom: 16, borderRadius: borderRadius.full, overflow: 'hidden' }}>
           <LinearGradient colors={colors.gradientAccent} style={styles.addBtn}>
-            <Text style={{ color: '#fff', fontFamily: fonts.semiBold, fontWeight: '600' }}>+ Add new product</Text>
+            <Text style={{ color: colors.accentForeground, fontFamily: fonts.semiBold, fontWeight: '600' }}>+ Add new product</Text>
           </LinearGradient>
         </TouchableOpacity>
 

@@ -18,8 +18,8 @@ export default function ScreenHeader({ title, subtitle, onBack, showLogout = fal
   const { logout } = useAuthStore();
   const insets = useSafeAreaInsets();
 
-  const fg = dark ? colors.primaryForeground : colors.foreground;
-  const muted = dark ? 'rgba(255,255,255,0.7)' : colors.foregroundMuted;
+  const fg = colors.foreground;
+  const muted = colors.foregroundMuted;
 
   const handleLogout = () => {
     Alert.alert('Log out', 'Are you sure you want to sign out?', [
@@ -29,7 +29,7 @@ export default function ScreenHeader({ title, subtitle, onBack, showLogout = fal
   };
 
   return (
-    <View style={[styles.wrap, { paddingTop: insets.top + 8, backgroundColor: dark ? colors.primary : colors.surface, borderBottomColor: dark ? 'transparent' : colors.border, borderBottomWidth: dark ? 0 : 1 }]}>
+    <View style={[styles.wrap, { paddingTop: insets.top + 8, backgroundColor: dark ? colors.surfaceElevated : colors.surface, borderBottomColor: dark ? 'transparent' : colors.border, borderBottomWidth: dark ? 0 : 1 }]}>
       <View style={styles.row}>
         <View style={styles.left}>
           {onBack && (
@@ -39,15 +39,15 @@ export default function ScreenHeader({ title, subtitle, onBack, showLogout = fal
           )}
           <View>
             {subtitle && <Text style={[styles.subtitle, { color: muted, fontFamily: fonts.regular }]}>{subtitle}</Text>}
-            <Text style={[styles.title, { color: fg, fontFamily: fonts.semiBold }]}>{title}</Text>
+            <Text style={[styles.title, { color: fg, fontFamily: fonts.displaySemi }]}>{title}</Text>
           </View>
         </View>
         {showLogout && (
           <TouchableOpacity
             onPress={handleLogout}
-            style={[styles.logoutBtn, { backgroundColor: dark ? 'rgba(255,255,255,0.12)' : colors.secondary, borderRadius: 999 }]}
+            style={[styles.logoutBtn, { backgroundColor: colors.secondary, borderRadius: 999 }]}
           >
-            <LogOut size={18} color={dark ? colors.primaryForeground : colors.foreground} />
+            <LogOut size={18} color={colors.foreground} />
           </TouchableOpacity>
         )}
       </View>
@@ -62,6 +62,6 @@ const styles = StyleSheet.create({
   backBtn: { marginRight: 12 },
   back: { fontSize: 22 },
   subtitle: { fontSize: 12, marginBottom: 2 },
-  title: { fontSize: 22, fontWeight: '600' },
+  title: { fontSize: 22 },
   logoutBtn: { width: 40, height: 40, alignItems: 'center', justifyContent: 'center' },
 });

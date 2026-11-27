@@ -19,7 +19,7 @@ export default function SectionHeader({ eyebrow, title, subtitle, centered = fal
           {eyebrow.toUpperCase()}
         </Text>
       )}
-      <Text style={[styles.title, { color: colors.foreground, fontFamily: fonts.semiBold }]}>
+      <Text style={[styles.title, { color: colors.foreground, fontFamily: fonts.display }]}>
         {title}
       </Text>
       {subtitle && (
@@ -35,6 +35,6 @@ const styles = StyleSheet.create({
   wrap: { marginBottom: 16 },
   centered: { alignItems: 'center' },
   eyebrow: { fontSize: 12, fontWeight: '500', letterSpacing: 2.8, marginBottom: 8 },
-  title: { fontSize: 28, fontWeight: '600', letterSpacing: -0.5, lineHeight: 34 },
+  title: { fontSize: 24, letterSpacing: -0.6, lineHeight: 29 },
   subtitle: { fontSize: 15, lineHeight: 22, marginTop: 8 },
 });

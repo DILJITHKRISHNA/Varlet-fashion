@@ -3,7 +3,7 @@ import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Home, Search, Heart, User, LayoutDashboard, Package, ClipboardList, Store } from 'lucide-react-native';
 import { useAuthStore, isShopRole, isPlatformAdmin } from '../store/authStore';
-import { useTheme } from '../context/ThemeContext';
+import FloatingTabBar from '../components/ui/FloatingTabBar';
 
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
 import LoginScreen from '../screens/auth/LoginScreen';
@@ -45,23 +45,10 @@ const Tab = createBottomTabNavigator();
 const ShopTab = createBottomTabNavigator();
 
 function ConsumerTabs() {
-  const { colors, layout, fonts } = useTheme();
-
   return (
     <Tab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.foregroundMuted,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: layout.tabBarHeight,
-        },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600', fontFamily: fonts.medium },
-      }}
+      tabBar={(props) => <FloatingTabBar {...props} />}
+      screenOptions={{ headerShown: false }}
     >
       <Tab.Screen name="Feed" component={FeedScreen} options={{ tabBarLabel: 'Home', tabBarIcon: ({ color, size }) => <Home size={size} color={color} /> }} />
       <Tab.Screen name="Search" component={SearchScreen} options={{ tabBarIcon: ({ color, size }) => <Search size={size} color={color} /> }} />
@@ -72,23 +59,10 @@ function ConsumerTabs() {
 }
 
 function ShopTabs() {
-  const { colors, layout, fonts } = useTheme();
-
   return (
     <ShopTab.Navigator
-      screenOptions={{
-        headerShown: false,
-        tabBarActiveTintColor: colors.accent,
-        tabBarInactiveTintColor: colors.foregroundMuted,
-        tabBarStyle: {
-          backgroundColor: colors.surface,
-          borderTopColor: colors.border,
-          paddingBottom: 8,
-          paddingTop: 8,
-          height: layout.tabBarHeight,
-        },
-        tabBarLabelStyle: { fontSize: 11, fontWeight: '600', fontFamily: fonts.medium },
-      }}
+      tabBar={(props) => <FloatingTabBar {...props} />}
+      screenOptions={{ headerShown: false }}
     >
       <ShopTab.Screen name="ShopHome" component={ShopDashboardScreen} options={{ tabBarLabel: 'Dashboard', tabBarIcon: ({ color, size }) => <LayoutDashboard size={size} color={color} /> }} />
       <ShopTab.Screen name="ShopProductsTab" component={ShopProductsScreen} options={{ tabBarLabel: 'Products', tabBarIcon: ({ color, size }) => <Package size={size} color={color} /> }} />

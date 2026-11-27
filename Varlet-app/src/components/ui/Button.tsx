@@ -64,14 +64,13 @@ export default function Button({
     ...(variant === 'ghost' && {
       backgroundColor: 'transparent',
       borderWidth: 1,
-      borderColor: 'rgba(255,255,255,0.2)',
+      borderColor: colors.border,
     }),
     opacity: disabled ? 0.6 : 1,
   };
 
   const labelColor =
     variant === 'primary' ? colors.primaryForeground
-    : variant === 'ghost' ? colors.primaryForeground
     : colors.foreground;
 
   return (

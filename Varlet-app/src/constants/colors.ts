@@ -64,6 +64,8 @@ export const lightColors = {
   destructiveForeground: palette.white,
   destructiveSoft: palette.destructiveSoft,
 
+  warningSoft: palette.warningSoft,
+
   border: palette.gray200,
   input: palette.gray200,
   ring: `${palette.accent}66`,
@@ -74,44 +76,47 @@ export const lightColors = {
   gradientSurface: ['#FFFFFF', '#F9FAFB'] as [string, string],
 } as const;
 
+// "Midnight Runway" — the app's theme, matching Varlet-fashion/frontend/src/styles.css.
 export const darkColors = {
-  background: '#121212',
-  surface: '#1E1E1E',
-  surfaceElevated: '#262626',
-  card: '#1E1E1E',
+  background: '#08070A',
+  surface: '#121015',
+  surfaceElevated: '#1A171E',
+  card: '#121015',
 
-  foreground: '#F9FAFB',
-  foregroundMuted: '#9CA3AF',
-  foregroundSubtle: '#6B7280',
+  foreground: '#F6F2EE',
+  foregroundMuted: '#A49DAB',
+  foregroundSubtle: '#6F6877',
 
-  primary: '#F9FAFB',
-  primaryForeground: '#111827',
+  primary: '#F6F2EE',
+  primaryForeground: '#0B090D',
 
-  secondary: '#2A2A2A',
-  secondaryForeground: '#F9FAFB',
+  secondary: '#1A171E',
+  secondaryForeground: '#F6F2EE',
 
-  muted: '#2A2A2A',
-  mutedForeground: '#9CA3AF',
+  muted: '#1A171E',
+  mutedForeground: '#A49DAB',
 
-  accent: '#FF7043',
-  accentForeground: '#111827',
-  accentSoft: '#3D2419',
+  accent: palette.accent,
+  accentForeground: '#140703',
+  accentSoft: '#2A1510',
 
-  success: palette.success,
-  successForeground: palette.white,
-  successSoft: '#064E3B',
+  success: '#34D399',
+  successForeground: '#04130D',
+  successSoft: '#0F2A21',
 
-  destructive: '#F87171',
-  destructiveForeground: palette.white,
-  destructiveSoft: '#7F1D1D',
+  destructive: '#FF5C5C',
+  destructiveForeground: '#1A0505',
+  destructiveSoft: '#32141A',
 
-  border: 'rgba(255,255,255,0.1)',
-  input: 'rgba(255,255,255,0.12)',
-  ring: `${palette.accent}80`,
+  warningSoft: '#33260C',
 
-  gradientAccent: ['#FF7043', '#E85A28'] as [string, string],
-  gradientDark: ['#1E1E1E', '#121212'] as [string, string],
-  gradientSurface: ['#1E1E1E', '#121212'] as [string, string],
+  border: 'rgba(255,255,255,0.09)',
+  input: 'rgba(255,255,255,0.14)',
+  ring: `${palette.accent}8C`,
+
+  gradientAccent: ['#FF8A4C', '#FF2E63'] as [string, string],
+  gradientDark: ['#1A171E', '#08070A'] as [string, string],
+  gradientSurface: ['#121015', '#08070A'] as [string, string],
 } as const;
 
 export type ColorScheme = typeof lightColors;

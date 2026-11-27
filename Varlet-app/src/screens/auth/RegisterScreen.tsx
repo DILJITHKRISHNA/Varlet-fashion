@@ -32,6 +32,7 @@ export default function RegisterScreen({ navigation }: any) {
 
   const handleStep1 = () => {
     if (!name || !email || !password) { Alert.alert('Missing fields', 'Please fill all fields'); return; }
+    if (password.length < 8) { Alert.alert('Password too short', 'Use at least 8 characters'); return; }
     setStep(2);
   };
 
@@ -134,14 +135,14 @@ export default function RegisterScreen({ navigation }: any) {
             <Text style={s.label}>Gender</Text>
             <View style={s.row}>
               {GENDERS.slice(0, 2).map(g => (
-                <TouchableOpacity key={g} style={[s.chip, { borderColor: gender === g ? '#FF6B35' : colors.border, backgroundColor: gender === g ? '#FFF0EA' : colors.surface }]} onPress={() => setGender(g)}>
+                <TouchableOpacity key={g} style={[s.chip, { borderColor: gender === g ? '#FF6B35' : colors.border, backgroundColor: gender === g ? colors.accentSoft : colors.surface }]} onPress={() => setGender(g)}>
                   <Text style={[s.chipText, { color: gender === g ? '#FF6B35' : colors.foreground }]}>{g}</Text>
                 </TouchableOpacity>
               ))}
             </View>
             <View style={[s.row, { marginBottom: 20 }]}>
               {GENDERS.slice(2).map(g => (
-                <TouchableOpacity key={g} style={[s.chip, { borderColor: gender === g ? '#FF6B35' : colors.border, backgroundColor: gender === g ? '#FFF0EA' : colors.surface }]} onPress={() => setGender(g)}>
+                <TouchableOpacity key={g} style={[s.chip, { borderColor: gender === g ? '#FF6B35' : colors.border, backgroundColor: gender === g ? colors.accentSoft : colors.surface }]} onPress={() => setGender(g)}>
                   <Text style={[s.chipText, { color: gender === g ? '#FF6B35' : colors.foreground, fontSize: 12 }]}>{g}</Text>
                 </TouchableOpacity>
               ))}
@@ -150,7 +151,7 @@ export default function RegisterScreen({ navigation }: any) {
             <Text style={s.label}>Age Group</Text>
             <View style={[s.prefGrid, { marginBottom: 20 }]}>
               {AGES.map(a => (
-                <TouchableOpacity key={a} style={[s.prefChip, { borderColor: ageGroup === a ? '#FF6B35' : colors.border, backgroundColor: ageGroup === a ? '#FFF0EA' : colors.surface }]} onPress={() => setAgeGroup(a)}>
+                <TouchableOpacity key={a} style={[s.prefChip, { borderColor: ageGroup === a ? '#FF6B35' : colors.border, backgroundColor: ageGroup === a ? colors.accentSoft : colors.surface }]} onPress={() => setAgeGroup(a)}>
                   <Text style={[s.prefText, { color: ageGroup === a ? '#FF6B35' : colors.foreground }]}>{a}</Text>
                 </TouchableOpacity>
               ))}
@@ -159,7 +160,7 @@ export default function RegisterScreen({ navigation }: any) {
             <Text style={s.label}>Fashion Preferences (pick any)</Text>
             <View style={s.prefGrid}>
               {FASHION_PREFS.map(p => (
-                <TouchableOpacity key={p} style={[s.prefChip, { borderColor: prefs.includes(p) ? '#FF6B35' : colors.border, backgroundColor: prefs.includes(p) ? '#FFF0EA' : colors.surface }]} onPress={() => togglePref(p)}>
+                <TouchableOpacity key={p} style={[s.prefChip, { borderColor: prefs.includes(p) ? '#FF6B35' : colors.border, backgroundColor: prefs.includes(p) ? colors.accentSoft : colors.surface }]} onPress={() => togglePref(p)}>
                   <Text style={[s.prefText, { color: prefs.includes(p) ? '#FF6B35' : colors.foreground }]}>{p}</Text>
                 </TouchableOpacity>
               ))}

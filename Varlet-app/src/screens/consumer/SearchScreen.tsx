@@ -4,6 +4,7 @@ import {
   ScrollView, Image, Dimensions,
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { Search, Check, Heart } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import SearchBar from '../../components/ui/SearchBar';
 import Chip from '../../components/ui/Chip';
@@ -92,9 +93,9 @@ export default function SearchScreen({ navigation }: any) {
     shopLogo: { width: 52, height: 52, borderRadius: 14, marginRight: 12 },
     shopName: { fontSize: 15, fontWeight: '700', color: colors.foreground },
     shopMeta: { fontSize: 12, color: colors.foregroundMuted, marginTop: 2 },
-    shopVerified: { fontSize: 11, color: '#10B981', marginTop: 2, fontWeight: '600' },
+    shopVerifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
+    shopVerified: { fontSize: 11, color: '#10B981', fontWeight: '600' },
     emptyState: { alignItems: 'center', paddingVertical: 60 },
-    emptyEmoji: { fontSize: 48, marginBottom: 16 },
     emptyText: { fontSize: 16, fontWeight: '600', color: colors.foreground },
     emptySub: { fontSize: 14, color: colors.foregroundMuted, marginTop: 4 },
     recent: { paddingHorizontal: 16, paddingTop: 16 },
@@ -145,7 +146,7 @@ export default function SearchScreen({ navigation }: any) {
               return (
                 <TouchableOpacity
                   key={val}
-                  style={[s.filterVal, { borderColor: selected ? '#FF6B35' : colors.border, backgroundColor: selected ? '#FFF0EA' : colors.surface }]}
+                  style={[s.filterVal, { borderColor: selected ? '#FF6B35' : colors.border, backgroundColor: selected ? colors.accentSoft : colors.surface }]}
                   onPress={() => toggleFilter(activeFilterKey, val)}
                 >
                   <Text style={[s.filterValText, { color: selected ? '#FF6B35' : colors.foreground }]}>{val}</Text>
@@ -194,7 +195,7 @@ export default function SearchScreen({ navigation }: any) {
             </TouchableOpacity>
           )) : (
             <View style={s.emptyState}>
-              <Text style={s.emptyEmoji}>🔍</Text>
+              <Search size={40} color={colors.foregroundSubtle} style={{ marginBottom: 16 }} />
               <Text style={s.emptyText}>No results found</Text>
               <Text style={s.emptySub}>Try a different search term</Text>
             </View>
@@ -206,7 +207,12 @@ export default function SearchScreen({ navigation }: any) {
               <View style={{ flex: 1 }}>
                 <Text style={s.shopName}>{shop.name}</Text>
                 <Text style={s.shopMeta}>{shop.distance} · {shop.productCount} products</Text>
-                {shop.isVerified && <Text style={s.shopVerified}>✓ Verified</Text>}
+                {shop.isVerified && (
+                  <View style={s.shopVerifiedRow}>
+                    <Check size={11} color="#10B981" strokeWidth={3} />
+                    <Text style={s.shopVerified}>Verified</Text>
+                  </View>
+                )}
               </View>
             </TouchableOpacity>
           ))
@@ -217,7 +223,10 @@ export default function SearchScreen({ navigation }: any) {
               <View style={s.productInfo}>
                 <Text style={s.productBrand}>{o.style}</Text>
                 <Text style={s.productName}>{o.title}</Text>
-                <Text style={[s.productPrice, { fontSize: 12, fontWeight: '500', color: colors.foregroundMuted }]}>♥ {o.savedCount.toLocaleString()} saved</Text>
+                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+                  <Heart size={11} color={colors.foregroundMuted} fill={colors.foregroundMuted} />
+                  <Text style={{ fontSize: 12, fontWeight: '500', color: colors.foregroundMuted }}>{o.savedCount.toLocaleString()} saved</Text>
+                </View>
               </View>
             </TouchableOpacity>
           ))

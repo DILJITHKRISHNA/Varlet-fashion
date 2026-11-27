@@ -1,15 +1,13 @@
 /**
- * Real data-access layer backed by Supabase, shaped to match the interfaces
- * in mockData.ts so screens need minimal changes when switching over.
+ * Data-access layer for the Varlet API, shaped to match the interfaces in
+ * mockData.ts so screens do not depend on the server's field names.
+ * The `userId` arguments are kept for the screens; the server identifies the
+ * user from the signed-in session.
  */
-import { supabase } from './supabase';
+import { ApiError, request } from './http';
 import type {
   Product, Shop, Outfit, Category, Banner, Notification,
 } from './mockData';
-import type { Database } from './database.types';
-
-type ProductInsert = Database['public']['Tables']['products']['Insert'];
-type ProductUpdate = Database['public']['Tables']['products']['Update'];
 
 // ─── Mappers: DB row (snake_case) → app shape (camelCase) ────────────────
 
@@ -29,7 +27,7 @@ function mapProduct(row: any): Product {
     rating: Number(row.rating),
     reviewCount: row.review_count,
     shopId: row.shop_id,
-    shopName: row.shops?.name ?? row.shop_name ?? '',
+    shopName: row.shop_name ?? '',
     tags: row.tags ?? [],
     occasion: row.occasion ?? '',
     fit: row.fit ?? '',
@@ -39,8 +37,7 @@ function mapProduct(row: any): Product {
   };
 }
 
-function mapShop(row: any, distanceKm?: number): Shop {
-  const productCount = Array.isArray(row.products) ? (row.products[0]?.count ?? 0) : row.product_count ?? 0;
+function mapShop(row: any): Shop {
   return {
     id: row.id,
     name: row.name,
@@ -51,10 +48,10 @@ function mapShop(row: any, distanceKm?: number): Shop {
     rating: Number(row.rating),
     reviewCount: row.review_count,
     followerCount: row.follower_count,
-    distance: distanceKm != null ? `${distanceKm.toFixed(1)} km` : row.distance_km != null ? `${Number(row.distance_km).toFixed(1)} km` : '—',
+    distance: row.distance_km != null ? `${Number(row.distance_km).toFixed(1)} km` : '—',
     location: row.location_text,
     isVerified: row.is_verified,
-    productCount,
+    productCount: row.product_count ?? 0,
     isOpen: row.is_open,
   };
 }
@@ -110,29 +107,34 @@ function mapNotification(row: any): Notification {
 // ─── Categories ────────────────────────────────────────────────────────
 
 export async function getCategories(): Promise<Category[]> {
-  const { data, error } = await supabase.from('categories').select('*').order('sort_order');
-  if (error) throw error;
-  return (data ?? []).map((r) => mapCategory(r));
+  const rows = await request<any[]>('/categories');
+  return rows.map((r) => mapCategory(r, r.product_count));
 }
 
 // ─── Shops ─────────────────────────────────────────────────────────────
 
 export async function getShops(): Promise<Shop[]> {
-  const { data, error } = await supabase.from('shops').select('*, products(count)').order('name');
-  if (error) throw error;
-  return (data ?? []).map((r) => mapShop(r));
+  return (await request<any[]>('/shops')).map((r) => mapShop(r));
 }
 
 export async function getNearbyShops(lat: number, lng: number, radiusKm = 10): Promise<Shop[]> {
-  const { data, error } = await supabase.rpc('nearby_shops', { lat, lng, radius_km: radiusKm });
-  if (error) throw error;
-  return (data ?? []).map((r: any) => mapShop(r, r.distance_km));
+  const rows = await request<any[]>('/shops/nearby', { query: { lat, lng, radius_km: radiusKm } });
+  return rows.map((r) => mapShop(r));
+}
+
+/** Turns "not found" into null and passes every other failure on. */
+async function orNull<T>(promise: Promise<T>): Promise<T | null> {
+  try {
+    return await promise;
+  } catch (e) {
+    if (e instanceof ApiError && e.status === 404) return null;
+    throw e;
+  }
 }
 
 export async function getShop(id: string): Promise<Shop | null> {
-  const { data, error } = await supabase.from('shops').select('*, products(count)').eq('id', id).maybeSingle();
-  if (error) throw error;
-  return data ? mapShop(data) : null;
+  const row = await orNull(request<any>(`/shops/${encodeURIComponent(id)}`));
+  return row ? mapShop(row) : null;
 }
 
 // ─── Products ──────────────────────────────────────────────────────────
@@ -146,191 +148,102 @@ export interface ProductFilters {
 }
 
 export async function getProducts(filters: ProductFilters = {}): Promise<Product[]> {
-  let q = supabase.from('products').select('*, shops(name)');
-  if (filters.query) q = q.or(`name.ilike.%${filters.query}%,category.ilike.%${filters.query}%,brand.ilike.%${filters.query}%`);
-  if (filters.category) q = q.eq('category', filters.category);
-  if (filters.shopId) q = q.eq('shop_id', filters.shopId);
-  if (filters.gender) q = q.eq('gender', filters.gender);
-  if (filters.trendingOnly) q = q.eq('is_trending', true);
-  const { data, error } = await q.order('created_at', { ascending: false });
-  if (error) throw error;
-  return (data ?? []).map(mapProduct);
+  const rows = await request<any[]>('/products', {
+    query: {
+      q: filters.query?.slice(0, 100),
+      category: filters.category,
+      shop_id: filters.shopId,
+      gender: filters.gender,
+      trending: filters.trendingOnly || undefined,
+      limit: 200,
+    },
+  });
+  return rows.map(mapProduct);
 }
 
 export async function getProduct(id: string): Promise<Product | null> {
-  const { data, error } = await supabase.from('products').select('*, shops(name)').eq('id', id).maybeSingle();
-  if (error) throw error;
-  return data ? mapProduct(data) : null;
+  const row = await orNull(request<any>(`/products/${encodeURIComponent(id)}`));
+  return row ? mapProduct(row) : null;
 }
 
 // ─── Outfits ───────────────────────────────────────────────────────────
 
 export async function getOutfits(): Promise<Outfit[]> {
-  const { data, error } = await supabase.from('outfits').select('*').order('saved_count', { ascending: false });
-  if (error) throw error;
-  return (data ?? []).map(mapOutfit);
+  return (await request<any[]>('/outfits')).map(mapOutfit);
 }
 
 // ─── Banners ───────────────────────────────────────────────────────────
 
 export async function getBanners(): Promise<Banner[]> {
-  const { data, error } = await supabase.from('banners').select('*').eq('is_active', true).order('sort_order');
-  if (error) throw error;
-  return (data ?? []).map(mapBanner);
+  return (await request<any[]>('/banners')).map(mapBanner);
 }
 
 // ─── Notifications ─────────────────────────────────────────────────────
 
-export async function getNotifications(userId: string): Promise<Notification[]> {
-  const { data, error } = await supabase
-    .from('notifications')
-    .select('*')
-    .eq('user_id', userId)
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return (data ?? []).map(mapNotification);
+export async function getNotifications(_userId: string): Promise<Notification[]> {
+  return (await request<any[]>('/me/notifications')).map(mapNotification);
 }
 
 export async function markNotificationRead(id: string): Promise<void> {
-  const { error } = await supabase.from('notifications').update({ is_read: true }).eq('id', id);
-  if (error) throw error;
+  await request(`/me/notifications/${id}/read`, { method: 'PATCH' });
 }
 
 // ─── Wishlist ──────────────────────────────────────────────────────────
 
+export async function getWishlistProducts(_userId: string): Promise<Product[]> {
+  return (await request<any[]>('/me/wishlist')).map(mapProduct);
+}
+
 export async function getWishlistProductIds(userId: string): Promise<string[]> {
-  const { data, error } = await supabase.from('wishlists').select('product_id').eq('user_id', userId);
-  if (error) throw error;
-  return (data ?? []).map((r) => r.product_id);
+  return (await getWishlistProducts(userId)).map((p) => p.id);
 }
 
-export async function getWishlistProducts(userId: string): Promise<Product[]> {
-  const { data, error } = await supabase
-    .from('wishlists')
-    .select('products(*, shops(name))')
-    .eq('user_id', userId);
-  if (error) throw error;
-  return (data ?? []).map((r: any) => mapProduct(r.products)).filter(Boolean);
+export async function addToWishlist(_userId: string, productId: string): Promise<void> {
+  await request(`/me/wishlist/${productId}`, { method: 'PUT' });
 }
 
-export async function addToWishlist(userId: string, productId: string): Promise<void> {
-  const { error } = await supabase.from('wishlists').insert({ user_id: userId, product_id: productId });
-  if (error && error.code !== '23505') throw error; // ignore duplicate
-}
-
-export async function removeFromWishlist(userId: string, productId: string): Promise<void> {
-  const { error } = await supabase.from('wishlists').delete().eq('user_id', userId).eq('product_id', productId);
-  if (error) throw error;
+export async function removeFromWishlist(_userId: string, productId: string): Promise<void> {
+  await request(`/me/wishlist/${productId}`, { method: 'DELETE' });
 }
 
 // ─── Shop follows ──────────────────────────────────────────────────────
 
+export async function getFollowedShops(_userId: string): Promise<Shop[]> {
+  return (await request<any[]>('/me/following')).map((r) => mapShop(r));
+}
+
 export async function isFollowingShop(userId: string, shopId: string): Promise<boolean> {
-  const { data, error } = await supabase
-    .from('shop_follows')
-    .select('shop_id')
-    .eq('user_id', userId)
-    .eq('shop_id', shopId)
-    .maybeSingle();
-  if (error) throw error;
-  return !!data;
+  return (await getFollowedShops(userId)).some((s) => s.id === shopId);
 }
 
-export async function followShop(userId: string, shopId: string): Promise<void> {
-  const { error } = await supabase.from('shop_follows').insert({ user_id: userId, shop_id: shopId });
-  if (error && error.code !== '23505') throw error;
+export async function followShop(_userId: string, shopId: string): Promise<void> {
+  await request(`/me/following/${shopId}`, { method: 'PUT' });
 }
 
-export async function unfollowShop(userId: string, shopId: string): Promise<void> {
-  const { error } = await supabase.from('shop_follows').delete().eq('user_id', userId).eq('shop_id', shopId);
-  if (error) throw error;
-}
-
-export async function getFollowedShops(userId: string): Promise<Shop[]> {
-  const { data, error } = await supabase
-    .from('shop_follows')
-    .select('shops(*, products(count))')
-    .eq('user_id', userId);
-  if (error) throw error;
-  return (data ?? []).map((r: any) => mapShop(r.shops)).filter(Boolean);
+export async function unfollowShop(_userId: string, shopId: string): Promise<void> {
+  await request(`/me/following/${shopId}`, { method: 'DELETE' });
 }
 
 // ─── Outfit saves ──────────────────────────────────────────────────────
 
+export async function getSavedOutfits(_userId: string): Promise<Outfit[]> {
+  return (await request<any[]>('/me/saved-outfits')).map(mapOutfit);
+}
+
 export async function getSavedOutfitIds(userId: string): Promise<string[]> {
-  const { data, error } = await supabase.from('outfit_saves').select('outfit_id').eq('user_id', userId);
-  if (error) throw error;
-  return (data ?? []).map((r) => r.outfit_id);
+  return (await getSavedOutfits(userId)).map((o) => o.id);
 }
 
-export async function getSavedOutfits(userId: string): Promise<Outfit[]> {
-  const { data, error } = await supabase.from('outfit_saves').select('outfits(*)').eq('user_id', userId);
-  if (error) throw error;
-  return (data ?? []).map((r: any) => mapOutfit(r.outfits)).filter(Boolean);
+export async function saveOutfit(_userId: string, outfitId: string): Promise<void> {
+  await request(`/me/saved-outfits/${outfitId}`, { method: 'PUT' });
 }
 
-export async function saveOutfit(userId: string, outfitId: string): Promise<void> {
-  const { error } = await supabase.from('outfit_saves').insert({ user_id: userId, outfit_id: outfitId });
-  if (error && error.code !== '23505') throw error;
+export async function unsaveOutfit(_userId: string, outfitId: string): Promise<void> {
+  await request(`/me/saved-outfits/${outfitId}`, { method: 'DELETE' });
 }
 
-export async function unsaveOutfit(userId: string, outfitId: string): Promise<void> {
-  const { error } = await supabase.from('outfit_saves').delete().eq('user_id', userId).eq('outfit_id', outfitId);
-  if (error) throw error;
-}
-
-// ─── Shop management (staff/admin) ────────────────────────────────────
+// ─── Shop management (staff/owner) ─────────────────────────────────────
 
 export async function getShopProducts(shopId: string): Promise<Product[]> {
   return getProducts({ shopId });
-}
-
-export async function createProduct(input: ProductInsert): Promise<void> {
-  const { error } = await supabase.from('products').insert(input);
-  if (error) throw error;
-}
-
-export async function updateProduct(id: string, patch: ProductUpdate): Promise<void> {
-  const { error } = await supabase.from('products').update(patch).eq('id', id);
-  if (error) throw error;
-}
-
-export async function deleteProduct(id: string): Promise<void> {
-  const { error } = await supabase.from('products').delete().eq('id', id);
-  if (error) throw error;
-}
-
-export async function getShopOrders(shopId: string) {
-  const { data, error } = await supabase
-    .from('orders')
-    .select('*, order_items(*), profiles(name, mobile)')
-    .eq('shop_id', shopId)
-    .order('created_at', { ascending: false });
-  if (error) throw error;
-  return data ?? [];
-}
-
-// ─── Store registration ────────────────────────────────────────────────
-
-export interface RegisterShopInput {
-  name: string;
-  description: string;
-  category: string;
-  locationText: string;
-  lat: number;
-  lng: number;
-}
-
-/** Caller must already have a session (sign up/in first) — see register_shop RPC. */
-export async function registerShop(input: RegisterShopInput): Promise<Shop> {
-  const { data, error } = await supabase.rpc('register_shop', {
-    shop_name: input.name,
-    shop_description: input.description,
-    shop_category: input.category,
-    shop_location_text: input.locationText,
-    shop_lat: input.lat,
-    shop_lng: input.lng,
-  });
-  if (error) throw error;
-  return mapShop(data);
 }

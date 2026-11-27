@@ -4,6 +4,7 @@ import {
   Image,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Heart, Shirt, ShoppingBag, Tag, X } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
 import {
@@ -72,8 +73,7 @@ export default function WishlistScreen({ navigation }: any) {
     outfitInfo: { padding: 12, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
     outfitTitle: { fontSize: 15, fontWeight: '600', color: colors.foreground },
     outfitStyle: { fontSize: 12, color: '#FF6B35', fontWeight: '600', marginTop: 2 },
-    removeBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#FEE2E2', alignItems: 'center', justifyContent: 'center' },
-    removeText: { fontSize: 16, color: '#EF4444' },
+    removeBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: colors.destructiveSoft, alignItems: 'center', justifyContent: 'center' },
     productRow: {
       flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface,
       borderRadius: borderRadius.xl, marginBottom: 12, overflow: 'hidden',
@@ -93,7 +93,7 @@ export default function WishlistScreen({ navigation }: any) {
     brandName: { fontSize: 15, fontWeight: '600', color: colors.foreground },
     brandSub: { fontSize: 12, color: colors.foregroundMuted, marginTop: 2 },
     empty: { alignItems: 'center', paddingVertical: 60 },
-    emptyEmoji: { fontSize: 48, marginBottom: 16 },
+    emptyIconWrap: { width: 72, height: 72, borderRadius: 36, backgroundColor: colors.secondary, alignItems: 'center', justifyContent: 'center', marginBottom: 16 },
     emptyTitle: { fontSize: 16, fontWeight: '600', color: colors.foreground },
     emptySub: { fontSize: 14, color: colors.foregroundMuted, marginTop: 4 },
     emptyBtn: { marginTop: 20, borderRadius: borderRadius.full, overflow: 'hidden' },
@@ -133,14 +133,16 @@ export default function WishlistScreen({ navigation }: any) {
                     <Text style={s.outfitStyle}>{o.style}</Text>
                   </View>
                   <TouchableOpacity style={s.removeBtn} onPress={() => removeOutfit(o.id)}>
-                    <Text style={s.removeText}>♥</Text>
+                    <Heart size={16} color="#EF4444" fill="#EF4444" />
                   </TouchableOpacity>
                 </View>
               </View>
             ))
           ) : (
             <View style={s.empty}>
-              <Text style={s.emptyEmoji}>👗</Text>
+              <View style={s.emptyIconWrap}>
+                <Shirt size={32} color={colors.foregroundMuted} />
+              </View>
               <Text style={s.emptyTitle}>No saved outfits</Text>
               <Text style={s.emptySub}>Browse the feed and save looks you love</Text>
               <TouchableOpacity style={s.emptyBtn} onPress={() => navigation.navigate('Feed')}>
@@ -163,15 +165,17 @@ export default function WishlistScreen({ navigation }: any) {
                   <Text style={s.productPrice}>₹{p.price.toLocaleString()}</Text>
                 </View>
                 <TouchableOpacity style={[s.removeBtn, { margin: 12 }]} onPress={() => removeProduct(p.id)}>
-                  <Text style={s.removeText}>♥</Text>
+                  <Heart size={16} color="#EF4444" fill="#EF4444" />
                 </TouchableOpacity>
               </TouchableOpacity>
             ))
           ) : (
             <View style={s.empty}>
-              <Text style={s.emptyEmoji}>🛍️</Text>
+              <View style={s.emptyIconWrap}>
+                <ShoppingBag size={32} color={colors.foregroundMuted} />
+              </View>
               <Text style={s.emptyTitle}>No saved products</Text>
-              <Text style={s.emptySub}>Tap ♥ on any product to save it here</Text>
+              <Text style={s.emptySub}>Tap the heart on any product to save it here</Text>
             </View>
           )
         )}
@@ -188,13 +192,15 @@ export default function WishlistScreen({ navigation }: any) {
                   <Text style={s.brandSub}>Following</Text>
                 </View>
                 <TouchableOpacity style={s.removeBtn} onPress={() => unfollowBrand(shop.id)}>
-                  <Text style={s.removeText}>✕</Text>
+                  <X size={16} color="#EF4444" />
                 </TouchableOpacity>
               </TouchableOpacity>
             ))
           ) : (
             <View style={s.empty}>
-              <Text style={s.emptyEmoji}>🏷️</Text>
+              <View style={s.emptyIconWrap}>
+                <Tag size={32} color={colors.foregroundMuted} />
+              </View>
               <Text style={s.emptyTitle}>No followed brands</Text>
               <Text style={s.emptySub}>Follow brands to get notified of new drops</Text>
             </View>

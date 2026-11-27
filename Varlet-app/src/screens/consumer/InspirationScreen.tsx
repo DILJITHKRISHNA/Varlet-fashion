@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Image } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
+import { Heart } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { getOutfits } from '../../services/api';
 import type { Outfit } from '../../services/mockData';
@@ -34,6 +35,7 @@ export default function InspirationScreen({ navigation }: any) {
     tag: { paddingHorizontal: 10, paddingVertical: 4, backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: borderRadius.full },
     tagText: { fontSize: 11, color: '#fff', fontWeight: '600' },
     savedRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: 16, paddingBottom: 14, paddingTop: 4 },
+    savedLeft: { flexDirection: 'row', alignItems: 'center', gap: 4 },
     savedText: { fontSize: 12, color: colors.foregroundMuted },
     viewBtn: { paddingHorizontal: 14, paddingVertical: 6, backgroundColor: colors.accentSoft, borderRadius: borderRadius.full },
     viewBtnText: { fontSize: 12, fontWeight: '700', color: '#FF6B35' },
@@ -62,7 +64,10 @@ export default function InspirationScreen({ navigation }: any) {
               </LinearGradient>
             </View>
             <View style={s.savedRow}>
-              <Text style={s.savedText}>♥ {outfit.savedCount.toLocaleString()} people saved this</Text>
+              <View style={s.savedLeft}>
+                <Heart size={12} color={colors.foregroundMuted} fill={colors.foregroundMuted} />
+                <Text style={s.savedText}>{outfit.savedCount.toLocaleString()} people saved this</Text>
+              </View>
               <View style={s.viewBtn}><Text style={s.viewBtnText}>Shop Look →</Text></View>
             </View>
           </TouchableOpacity>
