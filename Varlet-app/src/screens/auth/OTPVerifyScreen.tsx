@@ -1,7 +1,7 @@
 import React, { useState, useRef } from 'react';
 import {
   View, Text, TouchableOpacity, StyleSheet,
-  TextInput, KeyboardAvoidingView, Platform, ScrollView, Alert,
+  TextInput, KeyboardAvoidingView, Platform, ScrollView, Alert, type TextInputInstance,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
@@ -12,7 +12,7 @@ export default function OTPVerifyScreen({ navigation, route }: any) {
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [timer, setTimer] = useState(30);
   const [loading, setLoading] = useState(false);
-  const inputs = useRef<TextInput[]>([]);
+  const inputs = useRef<TextInputInstance[]>([]);
 
   React.useEffect(() => {
     if (timer <= 0) return;

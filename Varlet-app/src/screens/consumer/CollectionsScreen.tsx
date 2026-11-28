@@ -29,7 +29,7 @@ export default function CollectionsScreen({ navigation }: any) {
               <View style={styles.heading}>
                 <Text style={[styles.title, { color: colors.foreground, fontFamily: fonts.displaySemi }]}>{band.label}</Text>
                 <TouchableOpacity
-                  onPress={() => navigation.navigate('MainTabs', { screen: 'Search', params: { price: band.label, at: Date.now() } })}
+                  onPress={() => navigation.popTo('MainTabs', { screen: 'Search', params: { price: band.label, at: Date.now() } })}
                 >
                   <Text style={[styles.all, { color: colors.accent, fontFamily: fonts.medium }]}>
                     See all {band.count}

@@ -1,5 +1,5 @@
 import React, { useRef, useState } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch } from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Switch, type ScrollViewInstance } from 'react-native';
 import { Tag } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
@@ -36,7 +36,7 @@ export default function ShopOffersScreen({ navigation }: any) {
   const [form, setForm] = useState(BLANK);
   const [saving, setSaving] = useState(false);
   const [problem, setProblem] = useState<string | null>(null);
-  const scroll = useRef<ScrollView>(null);
+  const scroll = useRef<ScrollViewInstance>(null);
 
   const open = (offer: Offer | 'new') => {
     setProblem(null);

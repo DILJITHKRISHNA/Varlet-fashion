@@ -109,7 +109,7 @@ export default function ProductDetailScreen({ route, navigation }: any) {
         <View style={styles.content}>
           {product.brand ? (
             <TouchableOpacity
-              onPress={() => navigation.navigate('MainTabs', { screen: 'Search', params: { brand: product.brand, at: Date.now() } })}
+              onPress={() => navigation.popTo('MainTabs', { screen: 'Search', params: { brand: product.brand, at: Date.now() } })}
             >
               <Text style={[styles.brand, { color: colors.accent, fontFamily: fonts.semiBold }]}>
                 {product.brand.toUpperCase()}

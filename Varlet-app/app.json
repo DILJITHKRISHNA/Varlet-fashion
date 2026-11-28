@@ -44,7 +44,11 @@
           "resizeMode": "contain",
           "backgroundColor": "#08070A"
         }
-      ]
+      ],
+      "expo-font",
+      "expo-image",
+      "expo-secure-store",
+      "expo-status-bar"
     ],
     "backgroundColor": "#08070A"
   }

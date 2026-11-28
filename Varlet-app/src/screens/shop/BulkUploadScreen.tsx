@@ -122,7 +122,7 @@ export default function BulkUploadScreen({ navigation }: any) {
             <Text style={[styles.text, muted]}>
               {done
                 ? `${done.created} added and ${done.updated} updated.`
-                : `${result.totalRows} rows: ${result.created} new, ${result.updated} to update.`}
+                : `${result.totalRows} ${result.totalRows === 1 ? 'row' : 'rows'}: ${result.created} new, ${result.updated} to update.`}
               {result.errors.length > 0 &&
                 ` ${result.errors.length} ${done ? 'skipped' : 'will be skipped'}.`}
             </Text>
@@ -135,7 +135,7 @@ export default function BulkUploadScreen({ navigation }: any) {
               <Text style={[styles.text, muted]}>…and {result.errors.length - SHOWN_ERRORS} more.</Text>
             )}
             {done ? (
-              <Button label="View my products" variant="accent" onPress={() => navigation.navigate('ShopMainTabs', { screen: 'ShopProductsTab' })} />
+              <Button label="View my products" variant="accent" onPress={() => navigation.popTo('ShopMainTabs', { screen: 'ShopProductsTab' })} />
             ) : (
               <Button
                 label={valid ? `Upload ${valid} ${valid === 1 ? 'product' : 'products'}` : 'Nothing to upload'}
