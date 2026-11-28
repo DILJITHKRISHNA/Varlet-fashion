@@ -52,6 +52,9 @@ and are not exposed by Supabase's public REST API.
 Set `GEMINI_API_KEY` in `.env` (free key from Google AI Studio) and restart.
 Without it the route answers "Image search is not set up yet".
 
+When `GEMINI_MODEL` is overloaded, over quota or retired, the models in
+`GEMINI_FALLBACK_MODELS` are tried in order.
+
 - Gemini describes the garments; the API then matches type, colour, brand and words against
   shop products. It does not compare pixels, so most results are "similar", not "exact".
 - On Gemini's free tier, Google may use uploaded content to improve its products.

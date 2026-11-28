@@ -111,7 +111,7 @@ def bulk_template():
 
 
 @router.post(
-    "/products/bulk", 
+    "/products/bulk",
     response_model=BulkResult,
     dependencies=[Depends(rate_limit("bulk", 10))],
 )

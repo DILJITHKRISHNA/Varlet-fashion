@@ -26,6 +26,8 @@ class Settings(BaseSettings):
     load_sample_catalogue: bool = False
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.8-flash"
+    # Tried in order when the model above is overloaded or over its free quota.
+    gemini_fallback_models: str = "gemini-3.6-flash,gemini-3.5-flash-lite"
     seed_password: str = ""
 
     @field_validator("database_url")
@@ -35,6 +37,11 @@ class Settings(BaseSettings):
             if value.startswith(prefix):
                 return "postgresql+psycopg://" + value[len(prefix) :]
         return value
+
+    @property
+    def gemini_models(self) -> list[str]:
+        names = [self.gemini_model, *self.gemini_fallback_models.split(",")]
+        return list(dict.fromkeys(n.strip() for n in names if n.strip()))
 
     @property
     def cors_origin_list(self) -> list[str]:

@@ -1,6 +1,7 @@
 import json
 
 import httpx
+import pytest
 
 from app.schemas import DetectedItem
 from app.services import vision
@@ -78,14 +79,51 @@ def test_reads_gemini_reply_and_keeps_key_out_of_url(monkeypatch):
     assert "test-key" not in sent["url"] and sent["headers"]["x-goog-api-key"] == "test-key"
 
 
-def test_gemini_errors_become_safe_messages(client, monkeypatch):
+def fake_gemini(monkeypatch, *outcomes):
+    """Each outcome answers one call: a status code, or an exception to raise."""
     from app.core.config import get_settings
 
     monkeypatch.setattr(get_settings(), "gemini_api_key", "test-key")
-    for upstream, expected in ((429, 429), (400, 502), (500, 502)):
-        monkeypatch.setattr(
-            httpx, "post", lambda *a, code=upstream, **k: httpx.Response(code, text="secret detail")
-        )
-        response = client.post(URL, files={"file": ("a.jpg", JPEG)})
-        assert response.status_code == expected
-        assert "secret" not in response.text
+    queue = list(outcomes)
+    asked: list[str] = []
+
+    def post(url, **kwargs):
+        asked.append(url.rsplit("/", 1)[1].split(":")[0])
+        outcome = queue.pop(0) if len(queue) > 1 else queue[0]
+        if isinstance(outcome, Exception):
+            raise outcome
+        if outcome == 200:
+            text = json.dumps({"items": [{"item_type": "top", "name": "tee"}]})
+            reply = {"candidates": [{"content": {"parts": [{"text": text}]}}]}
+            return httpx.Response(200, json=reply)
+        return httpx.Response(outcome, text="secret detail")
+
+    monkeypatch.setattr(httpx, "post", post)
+    return asked
+
+
+def test_busy_model_falls_back_to_the_next(monkeypatch):
+    asked = fake_gemini(monkeypatch, 503, httpx.ReadTimeout("slow"), 200)
+    assert [i.name for i in vision.detect_items(JPEG, "image/jpeg")] == ["tee"]
+    assert asked == ["gemini-3.8-flash", "gemini-3.6-flash", "gemini-3.5-flash-lite"]
+
+
+@pytest.mark.parametrize(
+    ("outcome", "status", "words", "calls"),
+    [
+        (503, 503, "busy", 3),
+        (500, 503, "busy", 3),
+        (429, 429, "busy", 3),
+        (404, 503, "not set up correctly", 3),
+        (httpx.ConnectError("down"), 503, "not reachable", 3),
+        (403, 503, "not set up correctly", 1),  # a bad key: other models would fail too
+        (400, 502, "could not process", 1),
+    ],
+)
+def test_gemini_errors_become_safe_messages(client, monkeypatch, outcome, status, words, calls):
+    asked = fake_gemini(monkeypatch, outcome)
+    response = client.post(URL, files={"file": ("a.jpg", JPEG)})
+    assert response.status_code == status
+    assert words in response.json()["detail"]
+    assert "secret" not in response.text
+    assert len(asked) == calls
