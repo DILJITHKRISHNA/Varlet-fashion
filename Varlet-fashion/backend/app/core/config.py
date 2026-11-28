@@ -19,6 +19,11 @@ class Settings(BaseSettings):
     refresh_token_days: int = 30
     cors_origins: str = "http://localhost:8080,http://localhost:8081"
     rate_limit_enabled: bool = True
+    # Header in which the hosting proxy passes the visitor's address, if it does.
+    # Only set it when a proxy you trust always overwrites that header.
+    client_ip_header: str = ""
+    # Fill a new, empty database with the sample shops (no accounts).
+    load_sample_catalogue: bool = False
     gemini_api_key: str = ""
     gemini_model: str = "gemini-3.8-flash"
     seed_password: str = ""

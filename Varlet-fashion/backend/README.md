@@ -58,17 +58,32 @@ Without it the route answers "Image search is not set up yet".
   Tell users, or use a paid key, before real customers upload photos.
 - Instagram links cannot be fetched. Users upload a screenshot or a short clip (up to 12 MB).
 
-## Using a hosted database or server
+## Deploying (Render + Supabase)
 
-1. Put the connection string in `DATABASE_URL` (Supabase: Session pooler). Never commit it.
-2. `./.venv/bin/alembic upgrade head`
-3. On the server set `ENVIRONMENT=production`, a new `JWT_SECRET`, `DATABASE_URL`, and
-   `CORS_ORIGINS` with the website's address.
-4. Start: `uvicorn app.main:app --host 0.0.0.0 --port $PORT --proxy-headers`
-   (set `--forwarded-allow-ips` to your host's proxy so rate limits see real client addresses).
-5. Point the website (`VITE_API_URL`) and app (`EXPO_PUBLIC_API_URL`) at its https address.
+`render.yaml` at the repository root describes the service.
 
-`app.seed` refuses to run against anything but a local development database.
+1. **Database.** In Supabase, reset the database password (letters and numbers avoid URL
+   escaping). Open **Connect**, copy the **Session pooler** string, put the password in it
+   and add `?sslmode=require`. The direct connection is IPv6 only and will not work on Render.
+2. **Service.** In Render choose **New > Blueprint**, pick this repository, and enter
+   `DATABASE_URL` (and `GEMINI_API_KEY` if you have one).
+3. **Check.** Open `https://<your-service>.onrender.com/health`; it answers `{"status":"ok"}`.
+4. **Website.** In Vercel set `VITE_API_URL` to that address (no trailing slash) and redeploy.
+5. **App.** Set `EXPO_PUBLIC_API_URL` to the same address and restart Expo.
+
+On every start the service applies new migrations. With `LOAD_SAMPLE_CATALOGUE=true` an
+empty database also receives the sample shops, which are made up; turn it off and remove them
+before real customers arrive. No accounts are ever created automatically.
+
+If your website address changes, update `CORS_ORIGINS` in Render (comma separated).
+
+Free tiers: Render sleeps after 15 minutes without traffic and takes about a minute to wake,
+and says free services are not for production. Supabase pauses a free project after a week
+without activity.
+
+On another host: set the same variables, run `alembic upgrade head`, then
+`uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Set `CLIENT_IP_HEADER` only if that host's
+proxy always overwrites the header.
 
 ## Limits
 

@@ -1,0 +1,36 @@
+# Render Blueprint for the Varlet API. Steps: Varlet-fashion/backend/README.md
+# Values marked `sync: false` are typed into the Render dashboard and never stored here.
+services:
+  - type: web
+    name: varlet-api
+    runtime: python
+    plan: free
+    region: singapore # pick the one nearest your database
+    rootDir: Varlet-fashion/backend
+    buildCommand: pip install -r requirements.txt
+    # Migrations run at start because the free plan has no separate pre-deploy step.
+    startCommand: >-
+      alembic upgrade head &&
+      python -m app.seed --catalogue &&
+      uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
+    autoDeployTrigger: commit
+    envVars:
+      - key: PYTHON_VERSION
+        value: "3.13.5"
+      - key: ENVIRONMENT
+        value: production
+      - key: DATABASE_URL
+        sync: false
+      - key: JWT_SECRET
+        generateValue: true
+      - key: CORS_ORIGINS
+        value: https://varlet-fashion.vercel.app
+      - key: CLIENT_IP_HEADER
+        value: cf-connecting-ip
+      - key: LOAD_SAMPLE_CATALOGUE
+        value: "true"
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-3.8-flash

@@ -106,3 +106,18 @@ def test_login_is_rate_limited(client, monkeypatch):
     body = {"email": "nobody@example.com", "password": "wrong-password"}
     codes = [client.post(f"{API}/login", json=body).status_code for _ in range(11)]
     assert codes == [401] * 10 + [429]
+
+
+def test_rate_limit_counts_each_visitor_behind_a_proxy(client, monkeypatch):
+    from app.core.config import get_settings
+
+    monkeypatch.setattr(get_settings(), "rate_limit_enabled", True)
+    monkeypatch.setattr(get_settings(), "client_ip_header", "cf-connecting-ip")
+    body = {"email": "nobody@example.com", "password": "wrong-password"}
+
+    def attempt(address):
+        headers = {"cf-connecting-ip": address}
+        return client.post(f"{API}/login", json=body, headers=headers).status_code
+
+    assert [attempt("203.0.113.1") for _ in range(11)] == [401] * 10 + [429]
+    assert attempt("203.0.113.2") == 401

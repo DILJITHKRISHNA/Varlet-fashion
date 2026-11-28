@@ -7,7 +7,8 @@ import Constants from 'expo-constants';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-const REQUEST_TIMEOUT_MS = 20_000;
+// A free server that has been asleep can take about a minute to answer.
+const REQUEST_TIMEOUT_MS = 75_000;
 const SESSION_KEY = 'varlet.session';
 
 export class ApiError extends Error {
@@ -34,6 +35,11 @@ function resolveApiUrl(url: string): string {
 
 const configuredUrl = (process.env.EXPO_PUBLIC_API_URL ?? '').replace(/\/+$/, '');
 export const API_URL = configuredUrl ? resolveApiUrl(configuredUrl) : '';
+
+/** Starts a sleeping server early, as soon as the app opens. */
+export function wakeServer(): void {
+  if (API_URL) fetch(`${API_URL}/health`).catch(() => {});
+}
 
 // ─── Stored session ────────────────────────────────────────────────────
 

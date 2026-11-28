@@ -1,10 +1,10 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { CheckCircle2, Loader2, MapPin } from "lucide-react";
 
-import { apiPost } from "@/lib/varletApi";
+import { apiPost, wakeApi } from "@/lib/varletApi";
 import { useAppCta } from "./AppCtaContext";
 import {
   Dialog,
@@ -82,6 +82,10 @@ export function RegisterStoreDialog() {
       whatsapp: "",
     },
   });
+
+  useEffect(() => {
+    if (registerOpen) wakeApi();
+  }, [registerOpen]);
 
   const useCurrentLocation = () => {
     if (!navigator.geolocation) {

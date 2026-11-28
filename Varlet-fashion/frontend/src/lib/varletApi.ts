@@ -22,6 +22,11 @@ function describe(status: number, detail: unknown): string {
   return status >= 500 ? UNREACHABLE : "Something went wrong. Please try again.";
 }
 
+/** Starts a sleeping server early, so it is ready by the time a form is sent. */
+export function wakeApi(): void {
+  if (API_URL) fetch(`${API_URL}/health`).catch(() => {});
+}
+
 export async function apiPost<T>(path: string, body: unknown): Promise<T> {
   if (!API_URL) throw new ApiError("Store registration isn't available on this site yet.", 0);
   let response: Response;
@@ -30,7 +35,8 @@ export async function apiPost<T>(path: string, body: unknown): Promise<T> {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(body),
-      signal: AbortSignal.timeout(30_000),
+      // A free server that has been asleep can take about a minute to answer.
+      signal: AbortSignal.timeout(90_000),
     });
   } catch {
     throw new ApiError(UNREACHABLE, 0);

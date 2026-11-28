@@ -2,7 +2,13 @@
 
 import { create } from 'zustand';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { ApiError, getTokens, request, setSessionEndedHandler, setTokens } from '../services/http';
+import {
+  getTokens,
+  request,
+  setSessionEndedHandler,
+  setTokens,
+  wakeServer,
+} from '../services/http';
 
 export type UserRole = 'consumer' | 'admin' | 'manager' | 'staff' | 'super_admin' | null;
 export type ShopRole = Extract<UserRole, 'admin' | 'manager' | 'staff'>;
@@ -143,16 +149,22 @@ export const useAuthStore = create<AuthState>((set, get) => {
 
     // Call once at app startup (see App.tsx). Restores a saved session.
     initialize: async () => {
+      wakeServer();
       try {
-        if (await getTokens()) {
-          await apply(await request<Account>('/auth/me'));
+        if (!(await getTokens())) return;
+        // Open at once with the last known account; the server may be slow to answer.
+        const saved = await AsyncStorage.getItem(ACCOUNT_KEY);
+        if (saved) set({ ...toState(JSON.parse(saved)), isInitializing: false });
+        // A rejected session is signed out by the handler above. If the server is
+        // unreachable, the saved account stays.
+        const account = await request<Account>('/auth/me');
+        // Ignore the answer if the person signed out or switched accounts meanwhile.
+        const current = get().user;
+        if ((await getTokens()) && (!current || current.id === account.id)) {
+          await apply(account);
         }
-      } catch (e) {
-        // Server unreachable: keep the person signed in with what we last saw.
-        if (!(e instanceof ApiError && e.status === 401)) {
-          const saved = await AsyncStorage.getItem(ACCOUNT_KEY);
-          if (saved) set(toState(JSON.parse(saved)));
-        }
+      } catch {
+        // Nothing to do: see above.
       } finally {
         set({ isInitializing: false });
       }

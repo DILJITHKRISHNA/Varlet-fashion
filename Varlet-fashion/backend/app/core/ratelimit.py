@@ -17,11 +17,20 @@ def reset() -> None:
         _hits.clear()
 
 
+def client_address(request: Request) -> str:
+    """Behind a hosting proxy every connection looks the same, so ask for its header."""
+    header = get_settings().client_ip_header
+    forwarded = request.headers.get(header, "").strip() if header else ""
+    if forwarded:
+        return forwarded[:64]
+    return request.client.host if request.client else "unknown"
+
+
 def rate_limit(name: str, limit: int, window_seconds: int = 60):
     def dependency(request: Request) -> None:
         if not get_settings().rate_limit_enabled:
             return
-        key = (name, request.client.host if request.client else "unknown")
+        key = (name, client_address(request))
         now = time.monotonic()
         with _lock:
             hits = _hits[key]
