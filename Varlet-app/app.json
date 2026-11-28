@@ -29,6 +29,14 @@
         }
       ],
       [
+        "expo-image-picker",
+        {
+          "photosPermission": "Varlet needs your photos so you can search for outfits from a screenshot or clip.",
+          "cameraPermission": false,
+          "microphonePermission": false
+        }
+      ],
+      [
         "expo-splash-screen",
         {
           "image": "./assets/splash-icon.png",

@@ -95,6 +95,9 @@ type Method = 'GET' | 'POST' | 'PUT' | 'PATCH' | 'DELETE';
 interface Options {
   method?: Method;
   body?: unknown;
+  /** File upload; sent as multipart instead of JSON. */
+  form?: FormData;
+  timeoutMs?: number;
   query?: Record<string, string | number | boolean | undefined>;
 }
 
@@ -121,7 +124,7 @@ async function send(path: string, options: Options, accessToken?: string): Promi
     .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(String(value))}`)
     .join('&');
   const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS);
+  const timer = setTimeout(() => controller.abort(), options.timeoutMs ?? REQUEST_TIMEOUT_MS);
   try {
     return await fetch(`${API_URL}/api/v1${path}${query ? `?${query}` : ''}`, {
       method: options.method ?? 'GET',
@@ -129,7 +132,8 @@ async function send(path: string, options: Options, accessToken?: string): Promi
         ...(options.body !== undefined ? { 'Content-Type': 'application/json' } : {}),
         ...(accessToken ? { Authorization: `Bearer ${accessToken}` } : {}),
       },
-      body: options.body !== undefined ? JSON.stringify(options.body) : undefined,
+      // For uploads fetch sets the multipart Content-Type itself.
+      body: options.form ?? (options.body !== undefined ? JSON.stringify(options.body) : undefined),
       signal: controller.signal,
     });
   } catch {

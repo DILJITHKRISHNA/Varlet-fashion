@@ -75,8 +75,7 @@ def test_unusable_files_are_explained(client, make_owner):
 
 def test_template_imports_cleanly(client, make_owner):
     owner = make_owner()
-    template = client.get(
-        "/api/v1/shops/mine/products/bulk-template.csv", headers=bearer(owner)
-    ).content
+    # Opened by the phone's browser, so it needs no sign-in.
+    template = client.get("/api/v1/shops/mine/products/bulk-template.csv").content
     result = upload(client, owner, "t.csv", template).json()
     assert result["created"] == 1 and result["errors"] == []

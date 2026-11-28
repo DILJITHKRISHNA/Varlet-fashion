@@ -1,9 +1,11 @@
 import React from 'react';
 import { View, Text, StyleSheet, ScrollView, TouchableOpacity, Alert } from 'react-native';
-import { Store, Users, Bell, Shield, LogOut } from 'lucide-react-native';
+import { Store, Tag, Upload, LogOut } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
-import { MOCK_SHOPS } from '../../services/mockData';
+import { getMyShop } from '../../services/api';
+import { useAsync } from '../../hooks/useAsync';
+import { canManageStore } from '../../utils/shop';
 import ScreenHeader from '../../components/ui/ScreenHeader';
 
 const ROLE_LABELS: Record<string, string> = {
@@ -14,15 +16,14 @@ const ROLE_LABELS: Record<string, string> = {
 
 export default function ShopSettingsScreen({ navigation }: any) {
   const { colors, borderRadius, fonts } = useTheme();
-  const { user, role, shopId, logout } = useAuthStore();
-  const shop = MOCK_SHOPS.find(s => s.id === shopId) ?? MOCK_SHOPS[0];
+  const { user, role, logout } = useAuthStore();
+  const { data: shop } = useAsync(getMyShop);
 
   const settings = [
-    { icon: Store, label: 'Store profile', screen: 'ShopStoreProfile' },
-    { icon: Users, label: 'Staff management', screen: 'ShopStaff', roles: ['admin', 'manager'] },
-    { icon: Bell, label: 'Notifications', screen: null },
-    { icon: Shield, label: 'Privacy & security', screen: null },
-  ].filter(item => !item.roles || (role && item.roles.includes(role)));
+    { icon: Store, label: 'Store profile', screen: 'ShopStoreProfile', show: true },
+    { icon: Tag, label: 'Offers', screen: 'ShopOffers', show: canManageStore(role) },
+    { icon: Upload, label: 'Bulk upload', screen: 'BulkUpload', show: true },
+  ].filter(item => item.show);
 
   const handleLogout = () => {
     Alert.alert('Log out', 'Sign out of your shop account?', [
@@ -33,7 +34,7 @@ export default function ShopSettingsScreen({ navigation }: any) {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScreenHeader title="Store" subtitle={shop.name} showLogout />
+      <ScreenHeader title="Store" subtitle={shop?.name} showLogout />
 
       <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 100 }}>
         <View style={[styles.profileCard, { backgroundColor: colors.surface, borderRadius: borderRadius['3xl'], borderColor: colors.border }]}>
@@ -54,7 +55,7 @@ export default function ShopSettingsScreen({ navigation }: any) {
             <TouchableOpacity
               key={item.label}
               style={[styles.menuItem, { borderBottomColor: colors.border }]}
-              onPress={() => item.screen && navigation.navigate(item.screen)}
+              onPress={() => navigation.navigate(item.screen)}
             >
               <item.icon size={20} color={colors.foreground} />
               <Text style={[styles.menuLabel, { color: colors.foreground, fontFamily: fonts.medium }]}>{item.label}</Text>

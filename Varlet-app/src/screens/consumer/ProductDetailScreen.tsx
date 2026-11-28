@@ -1,123 +1,187 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Image, Dimensions,
-} from 'react-native';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Heart } from 'lucide-react-native';
+import { ChevronRight, Heart, MapPin } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
-import { getWishlistProductIds, addToWishlist, removeFromWishlist } from '../../services/api';
-import type { Product } from '../../services/mockData';
+import {
+  getWishlistProductIds, addToWishlist, removeFromWishlist,
+  getShop, getOffers, getCombinations, type Offer,
+} from '../../services/api';
+import type { Product, Shop } from '../../services/mockData';
+import { discountOff, rupees } from '../../utils/format';
 import Badge from '../../components/ui/Badge';
-import Button from '../../components/ui/Button';
-
-const { width } = Dimensions.get('window');
+import Chip from '../../components/ui/Chip';
+import Thumb from '../../components/ui/Thumb';
+import StateView from '../../components/ui/StateView';
+import SectionHeader from '../../components/ui/SectionHeader';
+import ContactActions from '../../components/ContactActions';
+import OfferCard from '../../components/OfferCard';
+import ProductGrid from '../../components/ProductGrid';
 
 export default function ProductDetailScreen({ route, navigation }: any) {
   const { colors, borderRadius, fonts } = useTheme();
   const insets = useSafeAreaInsets();
+  const { width } = useWindowDimensions();
   const { user } = useAuthStore();
-  const product: Product = route?.params?.product;
-  const [selectedSize, setSelectedSize] = useState(product?.sizes[1] ?? product?.sizes[0] ?? '');
+  const product: Product | undefined = route?.params?.product;
+  const [size, setSize] = useState(product?.sizes[0] ?? '');
+  const [photo, setPhoto] = useState(0);
   const [isSaved, setIsSaved] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [shop, setShop] = useState<Shop | null>(null);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const [pairs, setPairs] = useState<Product[]>([]);
 
   useEffect(() => {
-    if (!user || !product) return;
-    getWishlistProductIds(user.id)
+    if (!product) return;
+    // Each part is extra: the page still works if one of them fails.
+    getShop(product.shopId).then(setShop).catch(() => {});
+    getOffers({ shopId: product.shopId }).then(setOffers).catch(() => {});
+    getCombinations(product.id).then(setPairs).catch(() => {});
+    getWishlistProductIds(user?.id ?? '')
       .then((ids) => setIsSaved(ids.includes(product.id)))
       .catch(() => {});
-  }, [user, product]);
+  }, [product?.id]);
 
   const toggleSaved = async () => {
     if (!user || !product) return;
+    setSaveError(null);
     try {
-      if (isSaved) {
-        await removeFromWishlist(user.id, product.id);
-        setIsSaved(false);
-      } else {
-        await addToWishlist(user.id, product.id);
-        setIsSaved(true);
-      }
+      if (isSaved) await removeFromWishlist(user.id, product.id);
+      else await addToWishlist(user.id, product.id);
+      setIsSaved(!isSaved);
     } catch (e) {
-      console.warn('Failed to toggle wishlist', e);
+      setSaveError(e instanceof Error ? e.message : 'Could not update your wishlist.');
     }
   };
 
   if (!product) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background, alignItems: 'center', justifyContent: 'center' }]}>
-        <Text style={{ color: colors.foregroundMuted }}>Product not found</Text>
+      <View style={[styles.container, { backgroundColor: colors.background, paddingTop: insets.top + 40 }]}>
+        <StateView title="Product not found" action={{ label: 'Go back', onPress: () => navigation.goBack() }} />
       </View>
     );
   }
 
+  const off = discountOff(product.price, product.originalPrice);
+  const imageHeight = Math.min(width * 1.1, 520);
+  const text = { color: colors.foregroundMuted, fontFamily: fonts.regular };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 100 }}>
-        <View style={styles.imageWrap}>
-          <Image source={{ uri: product.images[0] }} style={styles.image} />
+      <ScrollView contentContainerStyle={{ paddingBottom: insets.bottom + 40 }}>
+        <View>
+          <ScrollView
+            horizontal
+            pagingEnabled
+            showsHorizontalScrollIndicator={false}
+            onScroll={(e) => setPhoto(Math.round(e.nativeEvent.contentOffset.x / width))}
+            scrollEventThrottle={64}
+          >
+            {(product.images.length ? product.images : ['']).map((uri, i) => (
+              <Thumb key={`${uri}-${i}`} uri={uri} style={{ width, height: imageHeight }} />
+            ))}
+          </ScrollView>
+          {product.images.length > 1 && (
+            <View style={styles.dots}>
+              {product.images.map((uri, i) => (
+                <View key={uri + i} style={[styles.dot, { backgroundColor: i === photo ? colors.accent : 'rgba(255,255,255,0.5)', width: i === photo ? 18 : 6 }]} />
+              ))}
+            </View>
+          )}
           <TouchableOpacity
-            style={[styles.backBtn, { top: insets.top + 8, borderRadius: borderRadius.full }]}
+            accessibilityLabel="Back"
+            style={[styles.round, { left: 16, top: insets.top + 8 }]}
             onPress={() => navigation.goBack()}
           >
             <Text style={styles.backText}>←</Text>
           </TouchableOpacity>
           <TouchableOpacity
-            style={[styles.heartBtn, { top: insets.top + 8, borderRadius: borderRadius.full, backgroundColor: 'rgba(255,255,255,0.75)' }]}
+            accessibilityLabel={isSaved ? 'Remove from wishlist' : 'Save to wishlist'}
+            style={[styles.round, { right: 16, top: insets.top + 8 }]}
             onPress={toggleSaved}
           >
-            <Heart size={16} color={isSaved ? colors.accent : colors.foreground} fill={isSaved ? colors.accent : 'transparent'} />
+            <Heart size={17} color={isSaved ? colors.accent : '#fff'} fill={isSaved ? colors.accent : 'transparent'} />
           </TouchableOpacity>
         </View>
 
         <View style={styles.content}>
-          <Text style={[styles.shop, { color: colors.foregroundMuted, fontFamily: fonts.regular }]}>
-            {product.shopName}
-          </Text>
-          <Text style={[styles.name, { color: colors.foreground, fontFamily: fonts.semiBold }]}>
-            {product.name}
-          </Text>
+          {product.brand ? (
+            <TouchableOpacity
+              onPress={() => navigation.navigate('MainTabs', { screen: 'Search', params: { brand: product.brand, at: Date.now() } })}
+            >
+              <Text style={[styles.brand, { color: colors.accent, fontFamily: fonts.semiBold }]}>
+                {product.brand.toUpperCase()}
+              </Text>
+            </TouchableOpacity>
+          ) : null}
+          <Text style={[styles.name, { color: colors.foreground, fontFamily: fonts.displaySemi }]}>{product.name}</Text>
 
           <View style={styles.priceRow}>
-            <Text style={[styles.price, { color: colors.foreground, fontFamily: fonts.semiBold }]}>
-              ₹{product.price.toLocaleString()}
-            </Text>
-            {product.inStock && <Badge label="In stock" variant="success" />}
+            <Text style={[styles.price, { color: colors.foreground, fontFamily: fonts.display }]}>{rupees(product.price)}</Text>
+            {off ? (
+              <>
+                <Text style={[styles.was, { color: colors.foregroundSubtle }]}>{rupees(product.originalPrice!)}</Text>
+                <Badge label={`${off}% off`} variant="accent" />
+              </>
+            ) : null}
+            <View style={styles.spacer} />
+            <Badge label={product.inStock ? 'In stock' : 'Out of stock'} variant={product.inStock ? 'success' : 'muted'} />
           </View>
+          {saveError && <Text style={[styles.error, { color: colors.destructive }]}>{saveError}</Text>}
 
-          <View style={styles.sizeRow}>
-            {product.sizes.map(size => {
-              const selected = selectedSize === size;
-              return (
-                <TouchableOpacity
-                  key={size}
-                  style={[
-                    styles.sizePill,
-                    {
-                      borderRadius: borderRadius.lg,
-                      backgroundColor: selected ? colors.primary : colors.muted,
-                    },
-                  ]}
-                  onPress={() => setSelectedSize(size)}
-                >
-                  <Text
-                    style={[
-                      styles.sizeText,
-                      {
-                        color: selected ? colors.primaryForeground : colors.foreground,
-                        fontFamily: fonts.medium,
-                      },
-                    ]}
-                  >
-                    {size}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
+          {product.sizes.length > 0 && (
+            <View style={styles.chips}>
+              {product.sizes.map((s) => (
+                <Chip key={s} label={s} selected={size === s} onPress={() => setSize(s)} />
+              ))}
+            </View>
+          )}
 
-          <Button label="Get directions" fullWidth onPress={() => {}} />
+          {product.colors.length > 0 && (
+            <View style={styles.colors}>
+              {product.colors.map((c) => (
+                <View key={c.name} style={styles.color}>
+                  {c.hex ? <View style={[styles.swatch, { backgroundColor: c.hex, borderColor: colors.border }]} /> : null}
+                  <Text style={[styles.colorName, text]}>{c.name}</Text>
+                </View>
+              ))}
+            </View>
+          )}
+
+          {product.description ? <Text style={[styles.description, text]}>{product.description}</Text> : null}
+
+          <TouchableOpacity
+            style={[styles.shop, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: borderRadius['2xl'] }]}
+            onPress={() => navigation.navigate('ShopProfile', { shopId: product.shopId, shop: shop ?? undefined })}
+          >
+            <View style={styles.spacer}>
+              <Text style={[styles.shopName, { color: colors.foreground, fontFamily: fonts.semiBold }]}>{product.shopName}</Text>
+              {shop && (
+                <View style={styles.location}>
+                  <MapPin size={12} color={colors.foregroundMuted} />
+                  <Text style={[styles.small, text]}>{shop.location} · {shop.isOpen ? 'Open now' : 'Closed'}</Text>
+                </View>
+              )}
+            </View>
+            <ChevronRight size={18} color={colors.foregroundMuted} />
+          </TouchableOpacity>
+
+          {shop && <ContactActions shop={shop} product={product} />}
+
+          {offers.length > 0 && (
+            <View style={styles.section}>
+              {offers.map((o) => <OfferCard key={o.id} offer={o} style={styles.offer} />)}
+            </View>
+          )}
+
+          {pairs.length > 0 && (
+            <View style={styles.section}>
+              <SectionHeader eyebrow="Complete the look" title="Goes well with" />
+              <ProductGrid products={pairs} navigation={navigation} />
+            </View>
+          )}
         </View>
       </ScrollView>
     </View>
@@ -126,32 +190,28 @@ export default function ProductDetailScreen({ route, navigation }: any) {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  imageWrap: { height: width * 0.72, position: 'relative' },
-  image: { width: '100%', height: '100%', resizeMode: 'cover' },
-  backBtn: {
-    position: 'absolute',
-    left: 16,
-    width: 36,
-    height: 36,
-    backgroundColor: 'rgba(0,0,0,0.35)',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
+  dots: { position: 'absolute', bottom: 14, alignSelf: 'center', flexDirection: 'row', gap: 5 },
+  dot: { height: 6, borderRadius: 3 },
+  round: { position: 'absolute', width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(8,7,10,0.6)', alignItems: 'center', justifyContent: 'center' },
   backText: { color: '#fff', fontSize: 18 },
-  heartBtn: {
-    position: 'absolute',
-    right: 16,
-    width: 36,
-    height: 36,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
   content: { padding: 20 },
-  shop: { fontSize: 12, marginBottom: 4 },
-  name: { fontSize: 18, fontWeight: '600', marginBottom: 8 },
-  priceRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
-  price: { fontSize: 20, fontWeight: '600' },
-  sizeRow: { flexDirection: 'row', gap: 8, marginBottom: 20 },
-  sizePill: { width: 36, height: 36, alignItems: 'center', justifyContent: 'center' },
-  sizeText: { fontSize: 14, fontWeight: '500' },
+  brand: { fontSize: 11, letterSpacing: 2, marginBottom: 6 },
+  name: { fontSize: 24, lineHeight: 29, marginBottom: 12 },
+  priceRow: { flexDirection: 'row', alignItems: 'center', gap: 8, marginBottom: 16 },
+  price: { fontSize: 26 },
+  was: { fontSize: 14, textDecorationLine: 'line-through' },
+  spacer: { flex: 1 },
+  error: { fontSize: 12, marginBottom: 10 },
+  chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 14 },
+  colors: { flexDirection: 'row', flexWrap: 'wrap', gap: 14, marginBottom: 14 },
+  color: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  swatch: { width: 16, height: 16, borderRadius: 8, borderWidth: 1 },
+  colorName: { fontSize: 12 },
+  description: { fontSize: 14, lineHeight: 21, marginBottom: 18 },
+  shop: { flexDirection: 'row', alignItems: 'center', padding: 16, borderWidth: 1, marginBottom: 12 },
+  shopName: { fontSize: 15 },
+  location: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 },
+  small: { fontSize: 12 },
+  section: { marginTop: 26 },
+  offer: { marginBottom: 10 },
 });

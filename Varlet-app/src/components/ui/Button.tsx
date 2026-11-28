@@ -36,7 +36,7 @@ export default function Button({
         onPress={onPress}
         disabled={disabled}
         activeOpacity={0.85}
-        style={[fullWidth && styles.full, style]}
+        style={[fullWidth && styles.full, disabled && styles.disabled, style]}
       >
         <LinearGradient
           colors={colors.gradientAccent}
@@ -88,4 +88,5 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   full: { width: '100%' },
+  disabled: { opacity: 0.6 },
 });

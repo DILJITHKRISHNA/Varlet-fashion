@@ -1,8 +1,9 @@
 import React from 'react';
 import { createStackNavigator } from '@react-navigation/stack';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { Home, Search, Heart, User, LayoutDashboard, Package, ClipboardList, Store } from 'lucide-react-native';
+import { Home, Search, Heart, User, LayoutDashboard, Package, MessageCircle, Store } from 'lucide-react-native';
 import { useAuthStore, isShopRole, isPlatformAdmin } from '../store/authStore';
+import { canManageStore } from '../utils/shop';
 import FloatingTabBar from '../components/ui/FloatingTabBar';
 
 import WelcomeScreen from '../screens/auth/WelcomeScreen';
@@ -28,14 +29,16 @@ import {
 } from '../screens/admin/AdminManagementScreens';
 import ShopDashboardScreen from '../screens/shop/ShopDashboardScreen';
 import ShopProductsScreen from '../screens/shop/ShopProductsScreen';
-import ShopPromotionsScreen from '../screens/shop/ShopPromotionsScreen';
-import ShopOrdersScreen from '../screens/shop/ShopOrdersScreen';
-import ShopStaffScreen from '../screens/shop/ShopStaffScreen';
-import ShopAnalyticsScreen from '../screens/shop/ShopAnalyticsScreen';
+import ShopOffersScreen from '../screens/shop/ShopOffersScreen';
+import ShopEnquiriesScreen from '../screens/shop/ShopEnquiriesScreen';
+import ProductEditorScreen from '../screens/shop/ProductEditorScreen';
+import BulkUploadScreen from '../screens/shop/BulkUploadScreen';
 import ShopStoreProfileScreen from '../screens/shop/ShopStoreProfileScreen';
 import ShopSettingsScreen from '../screens/shop/ShopSettingsScreen';
 import PlaceholderScreen from '../screens/misc/PlaceholderScreen';
 import ShopProfileScreen from '../screens/consumer/ShopProfileScreen';
+import PhotoSearchScreen from '../screens/consumer/PhotoSearchScreen';
+import CollectionsScreen from '../screens/consumer/CollectionsScreen';
 
 const AuthStack = createStackNavigator();
 const ConsumerStack = createStackNavigator();
@@ -59,6 +62,7 @@ function ConsumerTabs() {
 }
 
 function ShopTabs() {
+  const role = useAuthStore((s) => s.role);
   return (
     <ShopTab.Navigator
       tabBar={(props) => <FloatingTabBar {...props} />}
@@ -66,7 +70,9 @@ function ShopTabs() {
     >
       <ShopTab.Screen name="ShopHome" component={ShopDashboardScreen} options={{ tabBarLabel: 'Dashboard', tabBarIcon: ({ color, size }) => <LayoutDashboard size={size} color={color} /> }} />
       <ShopTab.Screen name="ShopProductsTab" component={ShopProductsScreen} options={{ tabBarLabel: 'Products', tabBarIcon: ({ color, size }) => <Package size={size} color={color} /> }} />
-      <ShopTab.Screen name="ShopOrdersTab" component={ShopOrdersScreen} options={{ tabBarLabel: 'Orders', tabBarIcon: ({ color, size }) => <ClipboardList size={size} color={color} /> }} />
+      {canManageStore(role) && (
+        <ShopTab.Screen name="ShopEnquiriesTab" component={ShopEnquiriesScreen} options={{ tabBarLabel: 'Enquiries', tabBarIcon: ({ color, size }) => <MessageCircle size={size} color={color} /> }} />
+      )}
       <ShopTab.Screen name="ShopSettingsTab" component={ShopSettingsScreen} options={{ tabBarLabel: 'Store', tabBarIcon: ({ color, size }) => <Store size={size} color={color} /> }} />
     </ShopTab.Navigator>
   );
@@ -94,6 +100,8 @@ function ConsumerNavigator() {
       <ConsumerStack.Screen name="Notifications" component={NotificationsScreen} />
       <ConsumerStack.Screen name="Inspiration" component={InspirationScreen} />
       <ConsumerStack.Screen name="ShopProfile" component={ShopProfileScreen} />
+      <ConsumerStack.Screen name="PhotoSearch" component={PhotoSearchScreen} />
+      <ConsumerStack.Screen name="Collections" component={CollectionsScreen} />
     </ConsumerStack.Navigator>
   );
 }
@@ -102,10 +110,9 @@ function ShopNavigator() {
   return (
     <ShopStack.Navigator screenOptions={{ headerShown: false }}>
       <ShopStack.Screen name="ShopMainTabs" component={ShopTabs} />
-      <ShopStack.Screen name="ShopProducts" component={ShopProductsScreen} />
-      <ShopStack.Screen name="ShopPromotions" component={ShopPromotionsScreen} />
-      <ShopStack.Screen name="ShopStaff" component={ShopStaffScreen} />
-      <ShopStack.Screen name="ShopAnalytics" component={ShopAnalyticsScreen} />
+      <ShopStack.Screen name="ProductEditor" component={ProductEditorScreen} />
+      <ShopStack.Screen name="BulkUpload" component={BulkUploadScreen} />
+      <ShopStack.Screen name="ShopOffers" component={ShopOffersScreen} />
       <ShopStack.Screen name="ShopStoreProfile" component={ShopStoreProfileScreen} />
     </ShopStack.Navigator>
   );

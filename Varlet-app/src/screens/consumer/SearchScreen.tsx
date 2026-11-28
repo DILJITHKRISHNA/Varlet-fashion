@@ -1,171 +1,189 @@
-import React, { useEffect, useState } from 'react';
-import {
-  View, Text, StyleSheet, TouchableOpacity,
-  ScrollView, Image, Dimensions,
-} from 'react-native';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-import { Search, Check, Heart } from 'lucide-react-native';
+import { Search, BadgeCheck, Heart, Camera, Tag, Store } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import SearchBar from '../../components/ui/SearchBar';
 import Chip from '../../components/ui/Chip';
 import SectionHeader from '../../components/ui/SectionHeader';
-import { getProducts, getShops, getNearbyShops, getOutfits } from '../../services/api';
+import StateView from '../../components/ui/StateView';
+import Thumb from '../../components/ui/Thumb';
+import PressableScale from '../../components/ui/PressableScale';
+import { getProducts, getShops, getNearbyShops, getOutfits, getBrands, getCategories } from '../../services/api';
 import type { Product, Shop, Outfit } from '../../services/mockData';
 import { useLocation } from '../../hooks/useLocation';
+import { PRICE_BANDS } from '../../constants/priceBands';
+import { rupees } from '../../utils/format';
 
-const { width } = Dimensions.get('window');
-const FILTERS = {
-  Price: ['Under ₹500', '₹500–₹1500', '₹1500–₹3000', '₹3000+'],
-  Style: ['Casual', 'Formal', 'Streetwear', 'Ethnic', 'Party'],
-  Gender: ['Men', 'Women', 'Unisex'],
-  Size: ['XS', 'S', 'M', 'L', 'XL', 'XXL'],
-  Color: ['Black', 'White', 'Blue', 'Red', 'Green', 'Beige'],
-};
+const GENDERS = ['Men', 'Women'];
+const SIZES = ['XS', 'S', 'M', 'L', 'XL', 'XXL'];
+const COLORS = ['Black', 'White', 'Blue', 'Red', 'Green', 'Pink', 'Beige'];
 
-export default function SearchScreen({ navigation }: any) {
+/** Price, brand, category and gender take one value; size and colour take several. */
+const SEVERAL = ['Size', 'Color'];
+type Filters = Record<string, string[]>;
+
+function matches(product: Product, filters: Filters): boolean {
+  const gender = filters.Gender?.[0]?.toLowerCase();
+  if (gender && product.gender !== gender && product.gender !== 'unisex') return false;
+  if (filters.Size?.length && !filters.Size.some((s) => product.sizes.includes(s))) return false;
+  if (filters.Color?.length) {
+    const names = product.colors.map((c) => c.name.toLowerCase()).join(' ');
+    if (!filters.Color.some((c) => names.includes(c.toLowerCase()))) return false;
+  }
+  return true;
+}
+
+export default function SearchScreen({ navigation, route }: any) {
   const { colors, borderRadius, fonts } = useTheme();
   const insets = useSafeAreaInsets();
   const [query, setQuery] = useState('');
-  const [activeFilterKey, setActiveFilterKey] = useState<string | null>(null);
-  const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({});
-  const [resultTab, setResultTab] = useState<'products' | 'shops' | 'outfits'>('products');
-  const [filtered, setFiltered] = useState<Product[]>([]);
-  const [filteredShops, setFilteredShops] = useState<Shop[]>([]);
+  const [openKey, setOpenKey] = useState<string | null>(null);
+  const [filters, setFilters] = useState<Filters>({});
+  const [tab, setTab] = useState<'products' | 'shops' | 'outfits'>('products');
+  const [products, setProducts] = useState<Product[] | null>(null);
+  const [shops, setShops] = useState<Shop[]>([]);
   const [outfits, setOutfits] = useState<Outfit[]>([]);
+  const [brands, setBrands] = useState<string[]>([]);
+  const [categories, setCategories] = useState<string[]>([]);
+  const [error, setError] = useState<string | null>(null);
+  const [attempt, setAttempt] = useState(0);
+  const latest = useRef(0);
   const { coords } = useLocation();
 
-  useEffect(() => {
-    if (!query) return;
-    const timeout = setTimeout(() => {
-      getProducts({ query }).then(setFiltered).catch((e) => console.warn('Search products failed', e));
-      const q = query.toLowerCase();
-      const shopsPromise = coords ? getNearbyShops(coords.lat, coords.lng, 25) : getShops();
-      shopsPromise
-        .then((shops) => setFilteredShops(shops.filter((s) => s.name.toLowerCase().includes(q))))
-        .catch((e) => console.warn('Search shops failed', e));
-      getOutfits().then(setOutfits).catch((e) => console.warn('Search outfits failed', e));
-    }, 250);
-    return () => clearTimeout(timeout);
-  }, [query, coords]);
+  const filterCount = Object.values(filters).reduce((sum, v) => sum + v.length, 0);
+  const active = query.trim().length > 0 || filterCount > 0;
 
-  const toggleFilter = (key: string, val: string) => {
-    setSelectedFilters(prev => {
-      const cur = prev[key] ?? [];
-      return { ...prev, [key]: cur.includes(val) ? cur.filter(v => v !== val) : [...cur, val] };
+  useEffect(() => {
+    getBrands().then(setBrands).catch(() => {});
+    getCategories().then((c) => setCategories(c.map((x) => x.name))).catch(() => {});
+    getOutfits().then(setOutfits).catch(() => {});
+  }, [attempt]);
+
+  // Another screen can open this one with a filter already chosen.
+  useEffect(() => {
+    const { brand, price, category } = route?.params ?? {};
+    if (!brand && !price && !category) return;
+    setQuery('');
+    setTab('products');
+    setOpenKey(null);
+    setFilters({
+      ...(brand ? { Brand: [brand] } : {}),
+      ...(price ? { Price: [price] } : {}),
+      ...(category ? { Category: [category] } : {}),
+    });
+  }, [route?.params?.at]);
+
+  const band = PRICE_BANDS.find((b) => b.label === filters.Price?.[0]);
+  const brand = filters.Brand?.[0];
+  const category = filters.Category?.[0];
+
+  useEffect(() => {
+    const call = ++latest.current;
+    setError(null);
+    setProducts(null);
+    if (!active) return;
+    const timer = setTimeout(() => {
+      getProducts({ query: query.trim(), brand, category, minPrice: band?.min, maxPrice: band?.max })
+        .then((found) => call === latest.current && setProducts(found))
+        .catch((e) => call === latest.current && setError(e.message));
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [query, brand, category, band?.label, active, attempt]);
+
+  useEffect(() => {
+    if (!active) return;
+    (coords ? getNearbyShops(coords.lat, coords.lng, 25) : getShops()).then(setShops).catch(() => {});
+  }, [active, coords?.lat, coords?.lng, attempt]);
+
+  const choose = (key: string, value: string) => {
+    setFilters((prev) => {
+      const current = prev[key] ?? [];
+      const next = current.includes(value)
+        ? current.filter((v) => v !== value)
+        : SEVERAL.includes(key) ? [...current, value] : [value];
+      return { ...prev, [key]: next };
     });
   };
 
-  const s = StyleSheet.create({
-    container: { flex: 1, backgroundColor: colors.background },
-    header: { paddingHorizontal: 20, paddingBottom: 16, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
-    filterRow: { paddingHorizontal: 16, paddingVertical: 10, backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border },
-    filterContent: { gap: 8 },
-    filterChip: {
-      flexDirection: 'row', alignItems: 'center',
-      paddingHorizontal: 14, paddingVertical: 7,
-      borderRadius: borderRadius.full, borderWidth: 1.5,
-    },
-    filterText: { fontSize: 13, fontWeight: '600' },
-    filterPanel: { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: colors.border, paddingHorizontal: 16, paddingVertical: 12 },
-    filterPanelTitle: { fontSize: 13, fontWeight: '700', color: colors.foreground, marginBottom: 10 },
-    filterValues: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-    filterVal: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: borderRadius.full, borderWidth: 1.5 },
-    filterValText: { fontSize: 12, fontWeight: '600' },
-    tabRow: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
-    tabBtn: { flex: 1, paddingVertical: 10, borderRadius: borderRadius.xl, alignItems: 'center' },
-    tabText: { fontSize: 13, fontWeight: '600' },
-    content: { padding: 16, paddingBottom: 100 },
-    productRow: {
-      flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface,
-      borderRadius: borderRadius.xl, marginBottom: 12, overflow: 'hidden',
-      shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
-    },
-    productImg: { width: 88, height: 88, resizeMode: 'cover' },
-    productInfo: { flex: 1, padding: 12 },
-    productBrand: { fontSize: 10, fontWeight: '600', color: '#FF6B35', marginBottom: 2 },
-    productName: { fontSize: 14, fontWeight: '600', color: colors.foreground, marginBottom: 4 },
-    productPrice: { fontSize: 15, fontWeight: '700', color: colors.foreground },
-    shopRow: {
-      flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface,
-      borderRadius: borderRadius.xl, marginBottom: 12, padding: 12,
-      shadowColor: '#000', shadowOffset: { width: 0, height: 1 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
-    },
-    shopLogo: { width: 52, height: 52, borderRadius: 14, marginRight: 12 },
-    shopName: { fontSize: 15, fontWeight: '700', color: colors.foreground },
-    shopMeta: { fontSize: 12, color: colors.foregroundMuted, marginTop: 2 },
-    shopVerifiedRow: { flexDirection: 'row', alignItems: 'center', gap: 3, marginTop: 2 },
-    shopVerified: { fontSize: 11, color: '#10B981', fontWeight: '600' },
-    emptyState: { alignItems: 'center', paddingVertical: 60 },
-    emptyText: { fontSize: 16, fontWeight: '600', color: colors.foreground },
-    emptySub: { fontSize: 14, color: colors.foregroundMuted, marginTop: 4 },
-    recent: { paddingHorizontal: 16, paddingTop: 16 },
-    recentTitle: { fontSize: 14, fontWeight: '700', color: colors.foreground, marginBottom: 12 },
-    recentTag: { paddingHorizontal: 12, paddingVertical: 7, backgroundColor: colors.secondary, borderRadius: borderRadius.full, marginBottom: 8, marginRight: 8 },
-    recentTagText: { fontSize: 13, color: colors.foreground },
-  });
+  const options: Record<string, string[]> = {
+    Price: PRICE_BANDS.map((b) => b.label),
+    Brand: brands,
+    Category: categories,
+    Gender: GENDERS,
+    Size: SIZES,
+    Color: COLORS,
+  };
+
+  const q = query.trim().toLowerCase();
+  const shownProducts = products?.filter((p) => matches(p, filters));
+  const shownShops = shops.filter((s) => !q || s.name.toLowerCase().includes(q));
+  const shownOutfits = outfits.filter((o) => !q || o.title.toLowerCase().includes(q));
+
+  const muted = { color: colors.foregroundMuted, fontFamily: fonts.regular };
+  const row = [styles.row, { backgroundColor: colors.surface, borderRadius: borderRadius.xl, borderColor: colors.border }];
 
   return (
-    <View style={s.container}>
-      <View style={[s.header, { paddingTop: insets.top + 12 }]}>
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.header, { paddingTop: insets.top + 12, backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
         <SectionHeader eyebrow="Search" title="Discover fashion near you" />
-        <SearchBar
-          value={query}
-          onChangeText={setQuery}
-          placeholder="Search products, shops, styles…"
-        />
+        <View style={styles.searchRow}>
+          <View style={styles.flex}>
+            <SearchBar value={query} onChangeText={setQuery} placeholder="Search products, brands, shops…" />
+          </View>
+          <TouchableOpacity
+            accessibilityLabel="Search by photo"
+            style={[styles.camera, { backgroundColor: colors.accent }]}
+            onPress={() => navigation.navigate('PhotoSearch')}
+          >
+            <Camera size={19} color={colors.accentForeground} />
+          </TouchableOpacity>
+        </View>
       </View>
 
-      {/* Filter row */}
-      <View style={s.filterRow}>
-        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.filterContent}>
-          {Object.keys(FILTERS).map(key => {
-            const hasSelected = (selectedFilters[key]?.length ?? 0) > 0;
-            const isOpen = activeFilterKey === key;
+      <View style={[styles.filterBar, { backgroundColor: colors.surface, borderBottomColor: colors.border }]}>
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
+          {filterCount > 0 && <Chip label="Clear all" onPress={() => { setFilters({}); setOpenKey(null); }} />}
+          {Object.keys(options).map((key) => {
+            const chosen = filters[key] ?? [];
+            const label = chosen.length === 1 ? chosen[0] : chosen.length ? `${key} (${chosen.length})` : key;
             return (
-              <TouchableOpacity
+              <Chip
                 key={key}
-                style={[s.filterChip, { borderColor: hasSelected ? colors.accent : colors.border, backgroundColor: hasSelected ? colors.accentSoft : colors.surface }]}
-                onPress={() => setActiveFilterKey(isOpen ? null : key)}
-              >
-                <Text style={[s.filterText, { color: hasSelected ? colors.accent : colors.foreground, fontFamily: fonts.medium }]}>
-                  {key}{hasSelected ? ` (${selectedFilters[key].length})` : ''} {isOpen ? '▲' : '▼'}
-                </Text>
-              </TouchableOpacity>
+                label={`${label} ${openKey === key ? '▲' : '▼'}`}
+                selected={chosen.length > 0}
+                onPress={() => setOpenKey(openKey === key ? null : key)}
+              />
             );
           })}
         </ScrollView>
+        {openKey && (
+          <ScrollView style={styles.panel} contentContainerStyle={styles.values}>
+            {options[openKey].length === 0 && <Text style={[styles.small, muted]}>Nothing to choose yet.</Text>}
+            {options[openKey].map((value) => (
+              <Chip
+                key={value}
+                label={value}
+                selected={filters[openKey]?.includes(value)}
+                onPress={() => {
+                  choose(openKey, value);
+                  if (!SEVERAL.includes(openKey)) setOpenKey(null);
+                }}
+              />
+            ))}
+          </ScrollView>
+        )}
       </View>
 
-      {/* Filter dropdown */}
-      {activeFilterKey && (
-        <View style={s.filterPanel}>
-          <Text style={s.filterPanelTitle}>{activeFilterKey}</Text>
-          <View style={s.filterValues}>
-            {(FILTERS as any)[activeFilterKey].map((val: string) => {
-              const selected = selectedFilters[activeFilterKey]?.includes(val);
-              return (
-                <TouchableOpacity
-                  key={val}
-                  style={[s.filterVal, { borderColor: selected ? '#FF6B35' : colors.border, backgroundColor: selected ? colors.accentSoft : colors.surface }]}
-                  onPress={() => toggleFilter(activeFilterKey, val)}
-                >
-                  <Text style={[s.filterValText, { color: selected ? '#FF6B35' : colors.foreground }]}>{val}</Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </View>
-      )}
-
-      {/* Result tabs */}
-      {query.length > 0 && (
-        <View style={s.tabRow}>
-          {(['products', 'shops', 'outfits'] as const).map(t => (
+      {active && (
+        <View style={styles.tabs}>
+          {(['products', 'shops', 'outfits'] as const).map((t) => (
             <TouchableOpacity
-              key={t} style={[s.tabBtn, { backgroundColor: resultTab === t ? '#FF6B35' : colors.secondary }]}
-              onPress={() => setResultTab(t)}
+              key={t}
+              style={[styles.tab, { backgroundColor: tab === t ? colors.accent : colors.secondary, borderRadius: borderRadius.xl }]}
+              onPress={() => setTab(t)}
             >
-              <Text style={[s.tabText, { color: resultTab === t ? '#fff' : colors.foregroundMuted }]}>
+              <Text style={[styles.tabText, { color: tab === t ? colors.accentForeground : colors.foregroundMuted, fontFamily: fonts.semiBold }]}>
                 {t.charAt(0).toUpperCase() + t.slice(1)}
               </Text>
             </TouchableOpacity>
@@ -173,59 +191,91 @@ export default function SearchScreen({ navigation }: any) {
         </View>
       )}
 
-      <ScrollView contentContainerStyle={s.content} keyboardShouldPersistTaps="handled">
-        {!query ? (
-          <View style={s.recent}>
-            <Text style={s.recentTitle}>Popular searches</Text>
-            <View style={{ flexDirection: 'row', flexWrap: 'wrap' }}>
-              {['oversized tee', 'cargo pants', 'sneakers', 'kurta', 'korean fashion', 'blazer'].map(tag => (
-                <Chip key={tag} label={tag} onPress={() => setQuery(tag)} style={{ marginBottom: 8, marginRight: 8 }} />
+      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+        {!active ? (
+          <>
+            <View style={styles.shortcuts}>
+              {[
+                { icon: Camera, title: 'Search by photo', screen: 'PhotoSearch' },
+                { icon: Tag, title: 'Shop by price', screen: 'Collections' },
+              ].map(({ icon: Icon, title, screen }) => (
+                <PressableScale
+                  key={screen}
+                  accessibilityRole="button"
+                  onPress={() => navigation.navigate(screen)}
+                  style={[styles.shortcut, { backgroundColor: colors.surface, borderColor: colors.border, borderRadius: borderRadius['2xl'] }]}
+                >
+                  <Icon size={22} color={colors.accent} />
+                  <Text style={[styles.shortcutText, { color: colors.foreground, fontFamily: fonts.semiBold }]}>{title}</Text>
+                </PressableScale>
               ))}
             </View>
-          </View>
-        ) : resultTab === 'products' ? (
-          filtered.length ? filtered.map(p => (
-            <TouchableOpacity key={p.id} style={s.productRow} onPress={() => navigation.navigate('ProductDetail', { product: p })}>
-              <Image source={{ uri: p.images[0] }} style={s.productImg} />
-              <View style={s.productInfo}>
-                <Text style={s.productBrand}>{p.brand}</Text>
-                <Text style={s.productName} numberOfLines={1}>{p.name}</Text>
-                <Text style={s.productPrice}>₹{p.price.toLocaleString()}</Text>
-              </View>
-            </TouchableOpacity>
-          )) : (
-            <View style={s.emptyState}>
-              <Search size={40} color={colors.foregroundSubtle} style={{ marginBottom: 16 }} />
-              <Text style={s.emptyText}>No results found</Text>
-              <Text style={s.emptySub}>Try a different search term</Text>
+            <Text style={[styles.heading, { color: colors.foreground, fontFamily: fonts.semiBold }]}>Popular searches</Text>
+            <View style={styles.values}>
+              {['tee', 'cargo', 'sneakers', 'kurta', 'korean', 'blazer'].map((word) => (
+                <Chip key={word} label={word} onPress={() => setQuery(word)} />
+              ))}
             </View>
-          )
-        ) : resultTab === 'shops' ? (
-          filteredShops.map(shop => (
-            <TouchableOpacity key={shop.id} style={s.shopRow} onPress={() => navigation.navigate('ShopProfile', { shop })}>
-              <Image source={{ uri: shop.logo }} style={s.shopLogo} />
-              <View style={{ flex: 1 }}>
-                <Text style={s.shopName}>{shop.name}</Text>
-                <Text style={s.shopMeta}>{shop.distance} · {shop.productCount} products</Text>
-                {shop.isVerified && (
-                  <View style={s.shopVerifiedRow}>
-                    <Check size={11} color="#10B981" strokeWidth={3} />
-                    <Text style={s.shopVerified}>Verified</Text>
+          </>
+        ) : tab === 'products' ? (
+          error ? (
+            <StateView error={error} action={{ label: 'Try again', onPress: () => setAttempt(attempt + 1) }} />
+          ) : !shownProducts ? (
+            <StateView loading />
+          ) : shownProducts.length === 0 ? (
+            <StateView icon={Search} title="No results found" message="Try different words or fewer filters." />
+          ) : (
+            <>
+              <Text style={[styles.count, muted]}>
+                {shownProducts.length} {shownProducts.length === 1 ? 'product' : 'products'}
+              </Text>
+              {shownProducts.map((p) => (
+                <TouchableOpacity key={p.id} style={row} onPress={() => navigation.navigate('ProductDetail', { product: p })}>
+                  <Thumb uri={p.images[0]} style={styles.image} />
+                  <View style={styles.info}>
+                    {p.brand ? <Text style={[styles.eyebrow, { color: colors.accent, fontFamily: fonts.semiBold }]}>{p.brand}</Text> : null}
+                    <Text numberOfLines={1} style={[styles.name, { color: colors.foreground, fontFamily: fonts.semiBold }]}>{p.name}</Text>
+                    <Text numberOfLines={1} style={[styles.small, muted]}>{p.shopName}</Text>
+                    <Text style={[styles.price, { color: colors.foreground, fontFamily: fonts.displaySemi }]}>{rupees(p.price)}</Text>
                   </View>
-                )}
-              </View>
-            </TouchableOpacity>
-          ))
+                </TouchableOpacity>
+              ))}
+            </>
+          )
+        ) : tab === 'shops' ? (
+          shownShops.length === 0 ? (
+            <StateView icon={Store} title="No shops found" message="No nearby shop matches that name." />
+          ) : (
+            shownShops.map((shop) => (
+              <TouchableOpacity key={shop.id} style={row} onPress={() => navigation.navigate('ShopProfile', { shop })}>
+                <Thumb uri={shop.logo} style={styles.image} />
+                <View style={styles.info}>
+                  <Text style={[styles.name, { color: colors.foreground, fontFamily: fonts.semiBold }]}>{shop.name}</Text>
+                  <Text style={[styles.small, muted]}>
+                    {shop.distance !== '—' ? `${shop.distance} · ` : ''}{shop.productCount} products
+                  </Text>
+                  {shop.isVerified && (
+                    <View style={styles.verified}>
+                      <BadgeCheck size={13} color={colors.success} />
+                      <Text style={[styles.small, { color: colors.success, fontFamily: fonts.medium }]}>Verified</Text>
+                    </View>
+                  )}
+                </View>
+              </TouchableOpacity>
+            ))
+          )
+        ) : shownOutfits.length === 0 ? (
+          <StateView icon={Search} title="No looks found" message="Try different words." />
         ) : (
-          outfits.filter(o => !query || o.title.toLowerCase().includes(query.toLowerCase())).map(o => (
-            <TouchableOpacity key={o.id} style={s.productRow} onPress={() => navigation.navigate('Inspiration')}>
-              <Image source={{ uri: o.image }} style={s.productImg} />
-              <View style={s.productInfo}>
-                <Text style={s.productBrand}>{o.style}</Text>
-                <Text style={s.productName}>{o.title}</Text>
-                <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: 4 }}>
+          shownOutfits.map((o) => (
+            <TouchableOpacity key={o.id} style={row} onPress={() => navigation.navigate('Inspiration')}>
+              <Thumb uri={o.image} style={styles.image} />
+              <View style={styles.info}>
+                <Text style={[styles.eyebrow, { color: colors.accent, fontFamily: fonts.semiBold }]}>{o.style}</Text>
+                <Text style={[styles.name, { color: colors.foreground, fontFamily: fonts.semiBold }]}>{o.title}</Text>
+                <View style={styles.verified}>
                   <Heart size={11} color={colors.foregroundMuted} fill={colors.foregroundMuted} />
-                  <Text style={{ fontSize: 12, fontWeight: '500', color: colors.foregroundMuted }}>{o.savedCount.toLocaleString()} saved</Text>
+                  <Text style={[styles.small, muted]}>{o.savedCount.toLocaleString('en-IN')} saved</Text>
                 </View>
               </View>
             </TouchableOpacity>
@@ -235,3 +285,32 @@ export default function SearchScreen({ navigation }: any) {
     </View>
   );
 }
+
+const styles = StyleSheet.create({
+  container: { flex: 1 },
+  flex: { flex: 1 },
+  header: { paddingHorizontal: 20, paddingBottom: 14, borderBottomWidth: 1 },
+  searchRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
+  camera: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center' },
+  filterBar: { paddingVertical: 10, borderBottomWidth: 1 },
+  chips: { paddingHorizontal: 16, gap: 8 },
+  panel: { maxHeight: 150, marginTop: 10 },
+  values: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, paddingHorizontal: 16 },
+  tabs: { flexDirection: 'row', paddingHorizontal: 16, paddingVertical: 10, gap: 8 },
+  tab: { flex: 1, paddingVertical: 10, alignItems: 'center' },
+  tabText: { fontSize: 13 },
+  content: { paddingVertical: 16, paddingBottom: 110 },
+  shortcuts: { flexDirection: 'row', gap: 12, paddingHorizontal: 16, marginBottom: 24 },
+  shortcut: { padding: 16, borderWidth: 1, gap: 10, width: 150 },
+  shortcutText: { fontSize: 13 },
+  heading: { fontSize: 14, marginBottom: 12, paddingHorizontal: 16 },
+  count: { fontSize: 12, marginBottom: 10, paddingHorizontal: 16 },
+  row: { flexDirection: 'row', alignItems: 'center', marginHorizontal: 16, marginBottom: 12, borderWidth: 1, overflow: 'hidden' },
+  image: { width: 92, height: 100 },
+  info: { flex: 1, padding: 12, gap: 3 },
+  eyebrow: { fontSize: 10, letterSpacing: 1 },
+  name: { fontSize: 14 },
+  small: { fontSize: 12 },
+  price: { fontSize: 16 },
+  verified: { flexDirection: 'row', alignItems: 'center', gap: 4 },
+});

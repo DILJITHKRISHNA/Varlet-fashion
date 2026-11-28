@@ -4,7 +4,8 @@
  * The `userId` arguments are kept for the screens; the server identifies the
  * user from the signed-in session.
  */
-import { ApiError, request } from './http';
+import { API_URL, ApiError, request } from './http';
+import { LocalFile, toFormData } from './upload';
 import type {
   Product, Shop, Outfit, Category, Banner, Notification,
 } from './mockData';
@@ -34,6 +35,7 @@ function mapProduct(row: any): Product {
     gender: row.gender,
     isTrending: row.is_trending,
     isNew: row.is_new,
+    sku: row.sku ?? undefined,
   };
 }
 
@@ -53,6 +55,10 @@ function mapShop(row: any): Shop {
     isVerified: row.is_verified,
     productCount: row.product_count ?? 0,
     isOpen: row.is_open,
+    phone: row.phone ?? undefined,
+    whatsapp: row.whatsapp ?? undefined,
+    lat: row.lat,
+    lng: row.lng,
   };
 }
 
@@ -142,8 +148,11 @@ export async function getShop(id: string): Promise<Shop | null> {
 export interface ProductFilters {
   query?: string;
   category?: string;
+  brand?: string;
   shopId?: string;
   gender?: 'men' | 'women' | 'unisex';
+  minPrice?: number;
+  maxPrice?: number;
   trendingOnly?: boolean;
 }
 
@@ -152,8 +161,11 @@ export async function getProducts(filters: ProductFilters = {}): Promise<Product
     query: {
       q: filters.query?.slice(0, 100),
       category: filters.category,
+      brand: filters.brand,
       shop_id: filters.shopId,
       gender: filters.gender,
+      min_price: filters.minPrice,
+      max_price: filters.maxPrice,
       trending: filters.trendingOnly || undefined,
       limit: 200,
     },
@@ -242,8 +254,268 @@ export async function unsaveOutfit(_userId: string, outfitId: string): Promise<v
   await request(`/me/saved-outfits/${outfitId}`, { method: 'DELETE' });
 }
 
-// ─── Shop management (staff/owner) ─────────────────────────────────────
-
 export async function getShopProducts(shopId: string): Promise<Product[]> {
   return getProducts({ shopId });
 }
+
+// ─── Finding things ────────────────────────────────────────────────────
+
+export async function getBrands(): Promise<string[]> {
+  return request<string[]>('/products/brands');
+}
+
+export interface PriceBand {
+  label: string;
+  count: number;
+  products: Product[];
+}
+
+export async function getPriceCollections(): Promise<PriceBand[]> {
+  const rows = await request<any[]>('/collections/price');
+  return rows.map((r) => ({ label: r.label, count: r.count, products: r.products.map(mapProduct) }));
+}
+
+/** Pieces that go with this one. */
+export async function getCombinations(productId: string): Promise<Product[]> {
+  return (await request<any[]>(`/products/${productId}/combinations`)).map(mapProduct);
+}
+
+export interface PhotoMatch {
+  exact: boolean;
+  product: Product;
+}
+
+export interface PhotoSearchResult {
+  detected: { name: string; brand?: string; colors: string[] }[];
+  results: PhotoMatch[];
+}
+
+export async function searchByPhoto(
+  file: LocalFile,
+  filters: { brand?: string; maxPrice?: number } = {}
+): Promise<PhotoSearchResult> {
+  const data = await request<any>('/search/image', {
+    method: 'POST',
+    form: await toFormData(file),
+    query: { brand: filters.brand, max_price: filters.maxPrice },
+    timeoutMs: 150_000,
+  });
+  return {
+    detected: data.detected.map((d: any) => ({
+      name: d.name,
+      brand: d.brand ?? undefined,
+      colors: d.colors,
+    })),
+    results: data.results.map((r: any) => ({
+      exact: r.match === 'exact',
+      product: mapProduct(r.product),
+    })),
+  };
+}
+
+// ─── Offers ────────────────────────────────────────────────────────────
+
+export interface Offer {
+  id: string;
+  shopId: string;
+  shopName: string;
+  title: string;
+  description: string;
+  discountPercent?: number;
+  startsAt: string;
+  endsAt?: string;
+  isActive: boolean;
+  distance?: string;
+}
+
+function mapOffer(row: any): Offer {
+  return {
+    id: row.id,
+    shopId: row.shop_id,
+    shopName: row.shop_name,
+    title: row.title,
+    description: row.description,
+    discountPercent: row.discount_percent ?? undefined,
+    startsAt: row.starts_at,
+    endsAt: row.ends_at ?? undefined,
+    isActive: row.is_active,
+    distance: row.distance_km != null ? `${Number(row.distance_km).toFixed(1)} km` : undefined,
+  };
+}
+
+/** Offers running now, nearest first when a location is given. */
+export async function getOffers(
+  options: { shopId?: string; lat?: number; lng?: number } = {}
+): Promise<Offer[]> {
+  const rows = await request<any[]>('/offers', {
+    query: { shop_id: options.shopId, lat: options.lat, lng: options.lng },
+  });
+  return rows.map(mapOffer);
+}
+
+export async function getMyOffers(): Promise<Offer[]> {
+  return (await request<any[]>('/shops/mine/offers')).map(mapOffer);
+}
+
+export interface OfferInput {
+  title: string;
+  description: string;
+  discountPercent: number | null;
+  /** null means no end date; undefined keeps the current one. */
+  endsAt?: string | null;
+  isActive: boolean;
+}
+
+function offerBody(input: Partial<OfferInput>) {
+  return {
+    title: input.title,
+    description: input.description,
+    discount_percent: input.discountPercent,
+    ends_at: input.endsAt,
+    is_active: input.isActive,
+  };
+}
+
+export async function saveOffer(input: Partial<OfferInput>, id?: string): Promise<void> {
+  await request(id ? `/shops/mine/offers/${id}` : '/shops/mine/offers', {
+    method: id ? 'PATCH' : 'POST',
+    body: offerBody(input),
+  });
+}
+
+export async function deleteOffer(id: string): Promise<void> {
+  await request(`/shops/mine/offers/${id}`, { method: 'DELETE' });
+}
+
+// ─── Customer enquiries ────────────────────────────────────────────────
+
+export type EnquiryKind = 'whatsapp' | 'call' | 'directions';
+
+export async function recordEnquiry(
+  shopId: string,
+  kind: EnquiryKind,
+  productId?: string
+): Promise<void> {
+  await request('/enquiries', {
+    method: 'POST',
+    body: { shop_id: shopId, kind, product_id: productId ?? null },
+  });
+}
+
+export type EnquiryCounts = Record<EnquiryKind, number>;
+
+export interface EnquirySummary {
+  total: number;
+  totals: EnquiryCounts;
+  byDay: (EnquiryCounts & { date: string })[];
+  topProducts: { productId: string; name: string; count: number }[];
+}
+
+export async function getEnquirySummary(days: number): Promise<EnquirySummary> {
+  const data = await request<any>('/shops/mine/enquiries/summary', { query: { days } });
+  return {
+    total: data.total,
+    totals: data.totals,
+    byDay: data.by_day,
+    topProducts: data.top_products.map((p: any) => ({
+      productId: p.product_id,
+      name: p.name,
+      count: p.count,
+    })),
+  };
+}
+
+export interface Enquiry {
+  id: string;
+  kind: EnquiryKind;
+  productName?: string;
+  createdAt: string;
+}
+
+export async function getRecentEnquiries(limit = 30): Promise<Enquiry[]> {
+  const rows = await request<any[]>('/shops/mine/enquiries', { query: { limit } });
+  return rows.map((r) => ({
+    id: r.id,
+    kind: r.kind,
+    productName: r.product_name ?? undefined,
+    createdAt: r.created_at,
+  }));
+}
+
+// ─── My store (staff/owner) ────────────────────────────────────────────
+
+export async function getMyShop(): Promise<Shop> {
+  return mapShop(await request<any>('/shops/mine'));
+}
+
+export interface ShopInput {
+  name: string;
+  description: string;
+  category: string | null;
+  location_text: string;
+  phone: string | null;
+  whatsapp: string | null;
+  is_open: boolean;
+  lat?: number;
+  lng?: number;
+}
+
+export async function updateMyShop(input: ShopInput): Promise<Shop> {
+  return mapShop(await request<any>('/shops/mine', { method: 'PATCH', body: input }));
+}
+
+export async function getMyProducts(): Promise<Product[]> {
+  return (await request<any[]>('/shops/mine/products')).map(mapProduct);
+}
+
+export interface ProductInput {
+  name: string;
+  sku: string | null;
+  brand: string | null;
+  category: string | null;
+  price: number;
+  original_price: number | null;
+  sizes: string[];
+  colors: { name: string; hex: string | null }[];
+  images: string[];
+  description: string;
+  tags: string[];
+  gender: 'men' | 'women' | 'unisex';
+  in_stock: boolean;
+}
+
+export async function saveProduct(input: Partial<ProductInput>, id?: string): Promise<void> {
+  await request(id ? `/shops/mine/products/${id}` : '/shops/mine/products', {
+    method: id ? 'PATCH' : 'POST',
+    body: input,
+  });
+}
+
+export async function deleteProduct(id: string): Promise<void> {
+  await request(`/shops/mine/products/${id}`, { method: 'DELETE' });
+}
+
+export interface BulkResult {
+  totalRows: number;
+  created: number;
+  updated: number;
+  errors: { row: number; message: string }[];
+}
+
+/** With `dryRun` the file is only checked; nothing is saved. */
+export async function bulkUploadProducts(file: LocalFile, dryRun: boolean): Promise<BulkResult> {
+  const data = await request<any>('/shops/mine/products/bulk', {
+    method: 'POST',
+    form: await toFormData(file),
+    query: { dry_run: dryRun },
+    timeoutMs: 150_000,
+  });
+  return {
+    totalRows: data.total_rows,
+    created: data.created,
+    updated: data.updated,
+    errors: data.errors,
+  };
+}
+
+export const PRODUCT_TEMPLATE_URL = `${API_URL}/api/v1/shops/mine/products/bulk-template.csv`;

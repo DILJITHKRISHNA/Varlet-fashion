@@ -25,6 +25,7 @@ export interface Product {
   gender: 'men' | 'women' | 'unisex';
   isTrending?: boolean;
   isNew?: boolean;
+  sku?: string;
 }
 
 export interface Shop {
@@ -42,6 +43,10 @@ export interface Shop {
   isVerified: boolean;
   productCount: number;
   isOpen: boolean;
+  phone?: string;
+  whatsapp?: string;
+  lat?: number;
+  lng?: number;
 }
 
 export interface Outfit {

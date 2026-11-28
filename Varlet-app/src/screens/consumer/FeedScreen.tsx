@@ -1,7 +1,7 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  Image, RefreshControl, Alert, useWindowDimensions,
+  Image, RefreshControl, useWindowDimensions,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import Animated, { FadeInDown, FadeInRight, LinearTransition } from 'react-native-reanimated';
@@ -9,7 +9,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Bell, Camera, Search } from 'lucide-react-native';
 import { useTheme } from '../../context/ThemeContext';
 import { useAuthStore } from '../../store/authStore';
-import { getProducts, getOutfits, getCategories } from '../../services/api';
+import { getProducts, getOutfits, getCategories, getOffers, type Offer } from '../../services/api';
+import { useLocation } from '../../hooks/useLocation';
+import OfferCard from '../../components/OfferCard';
 import { getCategoryIcon } from '../../constants/categoryIcons';
 import type { Product, Outfit, Category } from '../../services/mockData';
 import Logo from '../../components/ui/Logo';
@@ -38,6 +40,8 @@ export default function FeedScreen({ navigation }: any) {
   const [outfits, setOutfits] = useState<Outfit[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [error, setError] = useState(false);
+  const [offers, setOffers] = useState<Offer[]>([]);
+  const { coords } = useLocation();
 
   const firstName = user?.name?.split(' ')[0] ?? 'there';
   const visible = products.filter((p) => p.price <= budget.max);
@@ -59,13 +63,23 @@ export default function FeedScreen({ navigation }: any) {
     }
   }, []);
 
+  // Offers are an extra: the feed still works without them.
+  const loadOffers = useCallback(async () => {
+    if (!coords) return;
+    await getOffers(coords).then(setOffers).catch(() => {});
+  }, [coords]);
+
   useEffect(() => {
     load();
   }, [load]);
 
+  useEffect(() => {
+    loadOffers();
+  }, [loadOffers]);
+
   const onRefresh = async () => {
     setRefreshing(true);
-    await load();
+    await Promise.all([load(), loadOffers()]);
     setRefreshing(false);
   };
 
@@ -102,7 +116,7 @@ export default function FeedScreen({ navigation }: any) {
             </TouchableOpacity>
             <TouchableOpacity
               accessibilityLabel="Search by photo"
-              onPress={() => Alert.alert('Photo search', 'Searching by screenshot, reel or post is coming soon.')}
+              onPress={() => navigation.navigate('PhotoSearch')}
             >
               <LinearGradient colors={colors.gradientAccent} style={styles.camera}>
                 <Camera size={18} color={colors.accentForeground} />
@@ -117,7 +131,10 @@ export default function FeedScreen({ navigation }: any) {
               const Icon = getCategoryIcon(c.icon);
               return (
                 <Animated.View key={c.id} entering={FadeInRight.delay(i * 60).springify().damping(16)}>
-                  <PressableScale style={styles.category} onPress={() => navigation.navigate('Search')}>
+                  <PressableScale
+                    style={styles.category}
+                    onPress={() => navigation.navigate('Search', { category: c.name, at: Date.now() })}
+                  >
                     <View style={[styles.categoryRing, { borderColor: c.color + '80', backgroundColor: c.color + '1F' }]}>
                       <Icon size={22} color={c.color} />
                     </View>
@@ -129,6 +146,24 @@ export default function FeedScreen({ navigation }: any) {
               );
             })}
           </ScrollView>
+        )}
+
+        {offers.length > 0 && (
+          <View style={styles.section}>
+            <View style={styles.pad}>
+              <SectionHeader eyebrow="From shops near you" title="Offers" />
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.rail}>
+              {offers.map((o) => (
+                <OfferCard
+                  key={o.id}
+                  offer={o}
+                  style={{ width: Math.min(window.width * 0.7, 300) }}
+                  onPress={() => navigation.navigate('ShopProfile', { shopId: o.shopId })}
+                />
+              ))}
+            </ScrollView>
+          </View>
         )}
 
         {outfits.length > 0 && (
@@ -161,8 +196,11 @@ export default function FeedScreen({ navigation }: any) {
           </View>
         )}
 
-        <View style={[styles.section, styles.pad]}>
+        <View style={[styles.section, styles.sectionRow, styles.pad]}>
           <SectionHeader eyebrow="Shop the budget" title="Picks for you" />
+          <TouchableOpacity onPress={() => navigation.navigate('Collections')}>
+            <Text style={{ color: colors.accent, fontFamily: fonts.medium, fontSize: 13, marginBottom: 20 }}>By price</Text>
+          </TouchableOpacity>
         </View>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chips}>
           {BUDGETS.map((b) => (

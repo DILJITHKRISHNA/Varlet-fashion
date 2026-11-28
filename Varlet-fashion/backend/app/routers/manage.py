@@ -101,7 +101,8 @@ def add_product(body: ProductIn, shop: Shop = Depends(staff_shop), db: Session =
 
 
 @router.get("/products/bulk-template.csv")
-def bulk_template(shop: Shop = Depends(staff_shop)):
+def bulk_template():
+    """Public on purpose: a phone opens it in the browser, and it holds only column names."""
     return Response(
         bulk_import.TEMPLATE,
         media_type="text/csv",
@@ -110,7 +111,7 @@ def bulk_template(shop: Shop = Depends(staff_shop)):
 
 
 @router.post(
-    "/products/bulk",
+    "/products/bulk", 
     response_model=BulkResult,
     dependencies=[Depends(rate_limit("bulk", 10))],
 )
